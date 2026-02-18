@@ -11,7 +11,7 @@ const AnimatedNumber = ({ value }: { value: string }) => {
   const [display, setDisplay] = useState('0');
   
   useEffect(() => {
-    const isCurrency = value.includes('R$');
+    const isCurrency = typeof value === 'string' && value.includes('R$');
     const numericValue = parseFloat(value.replace(/[^0-9.,]/g, '').replace(',', '.'));
     
     if (isNaN(numericValue)) {
