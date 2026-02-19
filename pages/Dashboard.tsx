@@ -61,17 +61,17 @@ const KpiCard: React.FC<
 > = ({ title, value, change, changeType, icon: Icon, color, insight }) => {
   const { addToast } = useToast();
   return (
-    <div className="bg-[#121212] p-6 rounded-2xl border border-white/5 transition-all duration-300 group hover:border-[#B6FF00]/30 hover:bg-[#181818] relative overflow-hidden">
+    <div className="bg-[#121212] p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 transition-all duration-300 group hover:border-[#B6FF00]/30 hover:bg-[#181818] relative overflow-hidden">
       <div className="absolute -right-2 -top-2 w-16 h-16 bg-[#B6FF00]/5 rounded-full blur-2xl group-hover:bg-[#B6FF00]/10 transition-all" />
       <div className="flex justify-between items-start mb-4">
-        <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+        <span className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.2em]">
           {title}
         </span>
-        <div className="p-2 rounded-lg bg-black/50 border border-white/5 group-hover:border-[#B6FF00]/20 transition-all">
+        <div className="p-2 rounded-lg bg-black/50 border border-zinc-200 dark:border-zinc-800 group-hover:border-[#B6FF00]/20 transition-all">
           <Icon className={`w-5 h-5 ${color}`} />
         </div>
       </div>
-      <p className="text-3xl font-black text-white tracking-tighter">{value}</p>
+      <p className="text-3xl font-black text-zinc-900 dark:text-zinc-100 tracking-tighter">{value}</p>
       <div
         className={`flex items-center text-[11px] font-bold mt-2 ${
           changeType === "increase" ? "text-[#B6FF00]" : "text-red-500"
@@ -82,7 +82,7 @@ const KpiCard: React.FC<
         ) : (
           <ArrowDownRightIcon className="w-3.5 h-3.5 mr-1" />
         )}
-        {change} <span className="text-gray-600 ml-1 font-medium">vs. período anterior</span>
+        {change} <span className="text-zinc-500 dark:text-zinc-400 ml-1 font-medium">vs. período anterior</span>
       </div>
       {insight ? (
         <button
@@ -178,14 +178,14 @@ const Dashboard = () => {
       <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div>
           <h1 className="text-4xl font-black tracking-tighter">Visão Geral</h1>
-          <p className="text-gray-500 font-medium mt-1">
+          <p className="text-zinc-500 dark:text-zinc-400 font-medium mt-1">
             Olá, {username || "usuário"}. Aqui está seu panorama estratégico.
           </p>
         </div>
         <div className="flex gap-3 w-full md:w-auto">
           <button
             onClick={handleExport}
-            className="flex-1 md:flex-none bg-[#121212] border border-white/5 text-white font-bold text-[10px] uppercase tracking-widest py-3.5 px-6 rounded-xl hover:bg-white/5 transition-all"
+            className="flex-1 md:flex-none bg-[#121212] border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 font-bold text-[10px] uppercase tracking-widest py-3.5 px-6 rounded-xl hover:bg-white/5 transition-all"
           >
             Exportar CSV
           </button>
@@ -237,16 +237,16 @@ const Dashboard = () => {
       </div>
 
       {!hasChartData ? (
-        <div className="bg-[#121212] p-8 rounded-3xl border border-white/5 text-center text-gray-400">
+        <div className="bg-[#121212] p-8 rounded-3xl border border-zinc-200 dark:border-zinc-800 text-center text-gray-400">
           Nenhum dado disponível ainda. Adicione transações no fluxo financeiro para popular o
           dashboard.
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-0">
-          <div className="lg:col-span-2 bg-[#121212] p-8 rounded-3xl border border-white/5 relative overflow-hidden min-h-0">
+          <div className="lg:col-span-2 bg-[#121212] p-8 rounded-3xl border border-zinc-200 dark:border-zinc-800 relative overflow-hidden min-h-0">
             <div className="flex justify-between items-center mb-8 relative z-10">
               <h3 className="text-xl font-black tracking-tighter">Atividade</h3>
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
                 Dados Reais
               </span>
             </div>
@@ -290,14 +290,14 @@ const Dashboard = () => {
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-[320px] grid place-items-center text-gray-500 text-sm">
+                <div className="h-[320px] grid place-items-center text-zinc-500 dark:text-zinc-400 text-sm">
                   Sem histórico para o período.
                 </div>
               )}
             </div>
           </div>
 
-          <div className="bg-[#121212] p-8 rounded-3xl border border-white/5 flex flex-col items-center">
+          <div className="bg-[#121212] p-8 rounded-3xl border border-zinc-200 dark:border-zinc-800 flex flex-col items-center">
             <h3 className="text-xl font-black tracking-tighter mb-8 text-center">Mix de Produtos</h3>
             <div className="w-full">
               {summary.pieData.length > 0 ? (
@@ -332,7 +332,7 @@ const Dashboard = () => {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-[260px] grid place-items-center text-gray-500 text-sm">
+                <div className="h-[260px] grid place-items-center text-zinc-500 dark:text-zinc-400 text-sm">
                   Sem distribuição disponível.
                 </div>
               )}
@@ -341,7 +341,7 @@ const Dashboard = () => {
         </div>
       )}
 
-      <div className="bg-[#121212] p-8 rounded-3xl border border-white/5 flex flex-col md:flex-row items-start gap-8">
+      <div className="bg-[#121212] p-8 rounded-3xl border border-zinc-200 dark:border-zinc-800 flex flex-col md:flex-row items-start gap-8">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 rounded-lg bg-[#B6FF00]/10 text-[#B6FF00]">
@@ -349,7 +349,7 @@ const Dashboard = () => {
             </div>
             <h3 className="text-2xl font-black tracking-tighter">Insight Estratégico</h3>
           </div>
-          <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-line break-words">
+          <p className="text-zinc-600 dark:text-zinc-300 text-sm leading-relaxed whitespace-pre-line break-words">
             {displayedInsight || "Ainda sem insight gerado para os dados atuais."}
           </p>
           {longInsight ? (
@@ -367,3 +367,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+

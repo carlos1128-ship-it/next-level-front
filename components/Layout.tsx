@@ -1,114 +1,114 @@
-import React, { useState, ReactNode } from 'react';
-import { NavLink, Link } from 'react-router-dom';
-import type { NavItem } from '../types';
-import { HomeIcon, BarChartIcon, MessageSquareIcon, SettingsIcon, UserIcon, PuzzleIcon, BuildingIcon, LightbulbIcon, DollarSignIcon, PlusIcon, CreditCardIcon } from './icons';
-import { useAuth } from '../App';
+import React, { ReactNode, useState } from "react";
+import { Link, NavLink } from "react-router-dom";
+import type { NavItem } from "../types";
+import {
+  HomeIcon,
+  BarChartIcon,
+  MessageSquareIcon,
+  SettingsIcon,
+  UserIcon,
+  PuzzleIcon,
+  BuildingIcon,
+  LightbulbIcon,
+  DollarSignIcon,
+  PlusIcon,
+  CreditCardIcon,
+} from "./icons";
+import { useAuth } from "../App";
 
 const navItems: NavItem[] = [
-  { path: '/', name: 'Início', icon: HomeIcon, isPrimary: true },
-  { path: '/reports', name: 'Relatórios', icon: BarChartIcon, isPrimary: true },
-  { path: '/chat', name: 'Chat IA', icon: MessageSquareIcon, isPrimary: true },
-  { path: '/insights', name: 'Insights', icon: LightbulbIcon, isPrimary: true },
-  { path: '/plans', name: 'Planos', icon: CreditCardIcon },
-  { path: '/settings', name: 'Configurações', icon: SettingsIcon },
-  { path: '/profile', name: 'Perfil', icon: UserIcon },
-  { path: '/integrations', name: 'Integrações', icon: PuzzleIcon },
-  { path: '/companies', name: 'Empresas', icon: BuildingIcon },
-  { path: '/financial-flow', name: 'Fluxo Financeiro', icon: DollarSignIcon },
+  { path: "/", name: "Inicio", icon: HomeIcon, isPrimary: true },
+  { path: "/reports", name: "Relatorios", icon: BarChartIcon, isPrimary: true },
+  { path: "/chat", name: "Chat IA", icon: MessageSquareIcon, isPrimary: true },
+  { path: "/insights", name: "Insights", icon: LightbulbIcon, isPrimary: true },
+  { path: "/plans", name: "Planos", icon: CreditCardIcon },
+  { path: "/settings", name: "Configuracoes", icon: SettingsIcon },
+  { path: "/profile", name: "Perfil", icon: UserIcon },
+  { path: "/integrations", name: "Integracoes", icon: PuzzleIcon },
+  { path: "/companies", name: "Empresas", icon: BuildingIcon },
+  { path: "/financial-flow", name: "Fluxo Financeiro", icon: DollarSignIcon },
 ];
 
 const Sidebar = () => {
   const { username } = useAuth();
   return (
-    <aside className="fixed top-0 left-0 h-full w-64 bg-[#0A0A0A] text-white p-6 flex-col justify-between hidden lg:flex border-r border-white/5 z-50">
+    <aside className="fixed left-0 top-0 z-50 hidden h-full w-64 flex-col justify-between border-r border-zinc-200 bg-white p-6 text-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 lg:flex">
       <div>
-        <div className="text-2xl font-black text-[#B6FF00] mb-8 text-neon tracking-tighter">
-          NEXT LEVEL
-        </div>
-        <p className="text-gray-500 text-xs font-semibold uppercase tracking-widest mb-6">Operação Segura</p>
+        <div className="mb-8 text-2xl font-black tracking-tight text-lime-500">NEXT LEVEL</div>
+        <p className="mb-6 text-xs font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Operacao Segura</p>
         <nav aria-label="Menu Principal">
           <ul className="space-y-1">
-            {navItems.map((item) => (
+            {(Array.isArray(navItems) ? navItems : []).map((item) => (
               <li key={item.path}>
                 <NavLink
                   to={item.path}
                   className={({ isActive }) =>
-                    `flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 group ${
-                      isActive ? 'bg-[#B6FF00]/10 text-[#B6FF00]' : 'text-gray-500 hover:text-white hover:bg-white/5'
+                    `group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                      isActive
+                        ? "bg-lime-100 text-lime-700 dark:bg-lime-500/20 dark:text-lime-300"
+                        : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-100"
                     }`
                   }
                 >
-                  {({ isActive }) => (
-                    <>
-                      <item.icon className={`w-5 h-5 mr-3 transition-colors ${isActive ? 'text-[#B6FF00]' : 'group-hover:text-white'}`} />
-                      <span className="text-sm font-medium">{item.name}</span>
-                      {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[#B6FF00] neon-glow"></div>}
-                    </>
-                  )}
+                  <item.icon className="mr-3 h-5 w-5" />
+                  <span>{item.name}</span>
                 </NavLink>
               </li>
             ))}
           </ul>
         </nav>
       </div>
-      
-      <div className="pt-6 border-t border-white/5">
-         <Link to="/profile" className="flex items-center gap-3 group" aria-label="Acessar Perfil">
-            <div className="w-10 h-10 rounded-full bg-[#121212] border border-white/10 flex items-center justify-center text-[#B6FF00] group-hover:border-[#B6FF00]/50 transition-all font-black">
-               {username?.charAt(0).toUpperCase()}
-            </div>
-            <div>
-               <p className="text-sm font-bold">{username}</p>
-               <p className="text-[10px] text-gray-500 uppercase tracking-widest">Ver Perfil</p>
-            </div>
-         </Link>
-      </div>
+
+      <Link to="/profile" className="group flex items-center gap-3 border-t border-zinc-200 pt-6 dark:border-zinc-800" aria-label="Acessar perfil">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-300 bg-zinc-100 font-bold text-zinc-700 transition-all group-hover:border-lime-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
+          {username?.charAt(0).toUpperCase() || "U"}
+        </div>
+        <div>
+          <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">{username || "Usuario"}</p>
+          <p className="text-[10px] uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Ver Perfil</p>
+        </div>
+      </Link>
     </aside>
   );
 };
 
 const Header = () => {
-   const { username } = useAuth();
-   return (
-      <header className="h-16 flex items-center justify-between lg:justify-end px-6 lg:px-8 border-b border-white/5 glass sticky top-0 z-40">
-         <div className="lg:hidden text-lg font-black text-[#B6FF00] text-neon">NEXT LEVEL</div>
-         <div className="flex items-center gap-4">
-            <Link to="/settings" className="p-2 text-gray-500 hover:text-[#B6FF00] transition-colors" aria-label="Configurações">
-               <SettingsIcon className="w-5 h-5" />
-            </Link>
-            <Link to="/profile" className="flex items-center gap-2.5 group" aria-label="Menu do Usuário">
-               <div className="text-right hidden sm:block">
-                  <p className="text-xs font-bold text-white group-hover:text-[#B6FF00] transition-colors">{username}</p>
-                  <p className="text-[9px] text-gray-500 uppercase tracking-tighter">Estratégico</p>
-               </div>
-               <div className="w-8 h-8 rounded-full bg-[#121212] border border-white/10 flex items-center justify-center text-[#B6FF00] group-hover:border-[#B6FF00]/50 transition-all text-xs font-black">
-                  {username?.charAt(0).toUpperCase()}
-               </div>
-            </Link>
-         </div>
-      </header>
-   );
-}
+  const { username } = useAuth();
+  return (
+    <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-zinc-200 bg-white/90 px-6 backdrop-blur lg:justify-end lg:px-8 dark:border-zinc-800 dark:bg-zinc-950/90">
+      <div className="text-lg font-black text-lime-500 lg:hidden">NEXT LEVEL</div>
+      <div className="flex items-center gap-4">
+        <Link to="/settings" className="p-2 text-zinc-600 transition-colors hover:text-lime-500 dark:text-zinc-400" aria-label="Configuracoes">
+          <SettingsIcon className="h-5 w-5" />
+        </Link>
+        <Link to="/profile" className="group flex items-center gap-2.5" aria-label="Menu do usuario">
+          <div className="hidden text-right sm:block">
+            <p className="text-xs font-bold text-zinc-900 transition-colors group-hover:text-lime-500 dark:text-zinc-100">{username || "Usuario"}</p>
+            <p className="text-[9px] uppercase tracking-tighter text-zinc-500 dark:text-zinc-400">Estrategico</p>
+          </div>
+          <div className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-300 bg-zinc-100 text-xs font-black text-zinc-700 transition-all group-hover:border-lime-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
+            {username?.charAt(0).toUpperCase() || "U"}
+          </div>
+        </Link>
+      </div>
+    </header>
+  );
+};
 
 const BottomNav = () => (
-  <nav className="fixed bottom-0 left-0 right-0 bg-[#0A0A0A]/90 backdrop-blur-xl p-2 flex justify-around border-t border-white/5 lg:hidden z-50" aria-label="Menu Mobile">
-    {navItems.filter(item => item.isPrimary).map((item) => (
+  <nav className="fixed bottom-0 left-0 right-0 z-50 flex justify-around border-t border-zinc-200 bg-white/95 p-2 backdrop-blur lg:hidden dark:border-zinc-800 dark:bg-zinc-950/95" aria-label="Menu Mobile">
+    {(Array.isArray(navItems) ? navItems : []).filter((item) => item.isPrimary).map((item) => (
       <NavLink
         key={item.path}
         to={item.path}
         className={({ isActive }) =>
-          `relative flex flex-col items-center p-2 rounded-xl transition-all duration-300 w-1/4 ${
-            isActive ? 'text-[#B6FF00]' : 'text-gray-500'
+          `relative flex w-1/4 flex-col items-center rounded-xl p-2 text-[10px] font-bold uppercase tracking-tight transition-all ${
+            isActive ? "text-lime-500" : "text-zinc-500 dark:text-zinc-400"
           }`
         }
       >
-        {({ isActive }) => (
-          <>
-            <item.icon className="w-5 h-5" />
-            <span className="text-[10px] font-bold uppercase mt-1 tracking-tighter">{item.name}</span>
-            {isActive && <div className="absolute top-0 w-8 h-0.5 bg-[#B6FF00] rounded-full neon-glow"></div>}
-          </>
-        )}
+        <item.icon className="h-5 w-5" />
+        <span className="mt-1">{item.name}</span>
       </NavLink>
     ))}
   </nav>
@@ -116,44 +116,51 @@ const BottomNav = () => (
 
 const FloatingActionButton = () => {
   const [isOpen, setIsOpen] = useState(false);
-  
+
   const actions = [
-      { name: 'Nova Empresa', icon: BuildingIcon, path: '/companies' },
-      { name: 'Novo Relatório', icon: BarChartIcon, path: '/reports' },
-      { name: 'Nova Conversa', icon: MessageSquareIcon, path: '/chat' },
+    { name: "Nova Empresa", icon: BuildingIcon, path: "/companies" },
+    { name: "Novo Relatorio", icon: BarChartIcon, path: "/reports" },
+    { name: "Nova Conversa", icon: MessageSquareIcon, path: "/chat" },
   ];
 
   return (
-      <div className="fixed bottom-24 right-5 lg:bottom-10 lg:right-10 z-50">
-          {isOpen && (
-              <div className="flex flex-col items-center mb-4 space-y-4" role="menu">
-                  {actions.map((action, index) => (
-                      <Link key={action.name} to={action.path} onClick={() => setIsOpen(false)} className="flex items-center justify-center w-12 h-12 bg-[#121212] border border-white/10 rounded-full text-white hover:border-[#B6FF00] transition-all transform hover:scale-110 fade-in" style={{ animationDelay: `${index * 50}ms` }} role="menuitem">
-                          <action.icon className="w-5 h-5" />
-                      </Link>
-                  ))}
-              </div>
-          )}
-          <button 
-            onClick={() => setIsOpen(!isOpen)} 
-            className={`w-14 h-14 rounded-full flex items-center justify-center text-white shadow-2xl transition-all duration-300 ${isOpen ? 'bg-red-500 transform rotate-45' : 'bg-[#B6FF00] text-black neon-glow-strong'}`}
-            aria-label={isOpen ? "Fechar menu de ações" : "Abrir menu de ações"}
-            aria-expanded={isOpen}
-          >
-              <PlusIcon className="w-7 h-7 font-bold"/>
-          </button>
-      </div>
-  )
-}
+    <div className="fixed bottom-24 right-5 z-50 lg:bottom-10 lg:right-10">
+      {isOpen ? (
+        <div className="mb-4 flex flex-col items-center space-y-4" role="menu">
+          {actions.map((action) => (
+            <Link
+              key={action.name}
+              to={action.path}
+              onClick={() => setIsOpen(false)}
+              className="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-300 bg-white text-zinc-800 transition-all hover:scale-105 hover:border-lime-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+              role="menuitem"
+            >
+              <action.icon className="h-5 w-5" />
+            </Link>
+          ))}
+        </div>
+      ) : null}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`flex h-14 w-14 items-center justify-center rounded-full text-zinc-900 shadow-2xl transition-all duration-300 ${
+          isOpen ? "bg-red-500 text-white" : "bg-lime-300"
+        }`}
+        aria-label={isOpen ? "Fechar menu de acoes" : "Abrir menu de acoes"}
+        aria-expanded={isOpen}
+      >
+        <PlusIcon className="h-7 w-7" />
+      </button>
+    </div>
+  );
+};
 
 const Layout = ({ children }: { children: ReactNode }) => (
-  <div className="min-h-screen bg-[#f5f5f5] text-black dark:bg-black dark:text-white overflow-x-hidden">
+  <div className="min-h-screen overflow-x-hidden bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
     <Sidebar />
-    <main className="lg:pl-64 min-h-screen flex flex-col min-h-0">
+    <main className="min-h-screen min-h-0 flex-col lg:pl-64">
       <Header />
-      <div className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 fade-in min-h-0 overflow-x-hidden">
-        {children}
-      </div>
+      <div className="mx-auto w-full max-w-7xl flex-1 min-h-0 overflow-x-hidden p-4 md:p-8">{children}</div>
     </main>
     <BottomNav />
     <FloatingActionButton />

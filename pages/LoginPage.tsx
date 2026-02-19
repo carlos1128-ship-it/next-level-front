@@ -15,14 +15,14 @@ const Splash = ({ onDone }: { onDone: () => void }) => {
 
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     return (
-      <div className="absolute inset-0 bg-black flex items-center justify-center z-50" aria-label="NEXT LEVEL">
+      <div className="absolute inset-0 bg-white dark:bg-zinc-950 flex items-center justify-center z-50" aria-label="NEXT LEVEL">
         <h1 className="text-6xl font-black text-[#B6FF00] text-neon tracking-tighter">NEXT LEVEL</h1>
       </div>
     );
   }
 
   return (
-    <div className="absolute inset-0 bg-black flex flex-col items-center justify-center z-50" aria-label="NEXT LEVEL Animation">
+    <div className="absolute inset-0 bg-white dark:bg-zinc-950 flex flex-col items-center justify-center z-50" aria-label="NEXT LEVEL Animation">
       <div className="relative flex flex-col items-center">
         <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
           <div className="flex">
@@ -55,7 +55,7 @@ const Splash = ({ onDone }: { onDone: () => void }) => {
             })}
           </div>
         </div>
-        <p className="text-gray-600 mt-10 tracking-[1em] text-[10px] font-black uppercase fade-in" style={{ animationDelay: '2s' }}>
+        <p className="text-zinc-500 mt-10 tracking-[1em] text-[10px] font-black uppercase fade-in" style={{ animationDelay: '2s' }}>
           Pronto para avançar
         </p>
       </div>
@@ -75,7 +75,7 @@ const AuthForm = ({ title, subtitle, onSubmit, children, buttonText, loading, fo
     <div className="w-full max-w-sm fade-in">
         <div className="text-center mb-10">
             <h1 className="text-4xl font-black text-[#B6FF00] text-neon tracking-tighter">{title}</h1>
-            <p className="text-gray-500 mt-2 text-sm font-medium">{subtitle}</p>
+            <p className="text-zinc-500 dark:text-zinc-400 mt-2 text-sm font-medium">{subtitle}</p>
         </div>
         <form onSubmit={onSubmit} className="bg-[#121212] p-8 rounded-2xl border border-white/5 shadow-2xl">
             {children}
@@ -175,7 +175,7 @@ const LoginPage = () => {
             buttonText="→ Começar agora"
             loading={loading}
             footerContent={
-                <button type="button" onClick={() => { setIsRegisterView(false); resetForm(); }} className="inline-block align-baseline font-bold text-sm text-gray-500 hover:text-white mt-6 transition-colors">
+                <button type="button" onClick={() => { setIsRegisterView(false); resetForm(); }} className="inline-block align-baseline font-bold text-sm text-gray-500 hover:text-zinc-900 dark:hover:text-zinc-100 mt-6 transition-colors">
                     Já tem uma conta? <span className="text-[#B6FF00]">Entrar</span>
                 </button>
             }
@@ -202,7 +202,7 @@ const LoginPage = () => {
             buttonText="→ Entrar no sistema"
             loading={loading}
             footerContent={
-                 <button type="button" onClick={() => { setIsRegisterView(true); resetForm(); }} className="inline-block align-baseline font-bold text-sm text-gray-500 hover:text-white mt-6 transition-colors">
+                 <button type="button" onClick={() => { setIsRegisterView(true); resetForm(); }} className="inline-block align-baseline font-bold text-sm text-gray-500 hover:text-zinc-900 dark:hover:text-zinc-100 mt-6 transition-colors">
                     Não tem uma conta? <span className="text-[#B6FF00]">Criar conta</span>
                 </button>
             }
@@ -224,10 +224,11 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 flex items-center justify-center p-4">
       {renderContent()}
     </div>
   );
 };
 
 export default LoginPage;
+

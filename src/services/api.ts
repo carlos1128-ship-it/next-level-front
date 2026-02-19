@@ -26,6 +26,16 @@ async function parseError(response: Response) {
   return fallback;
 }
 
+async function parseJsonSafely<T>(response: Response) {
+  const text = await response.text();
+  if (!text) return null as T;
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new Error("Resposta invalida da API.");
+  }
+}
+
 export async function apiRequest<T = unknown>(
   endpoint: string,
   options: RequestInit = {}
@@ -40,7 +50,7 @@ export async function apiRequest<T = unknown>(
   }
 
   if (response.status === 204) return null as T;
-  return (await response.json()) as T;
+  return await parseJsonSafely<T>(response);
 }
 
 export async function apiDownload(endpoint: string) {

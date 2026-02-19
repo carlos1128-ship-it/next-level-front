@@ -4,15 +4,20 @@
 
 :root {
   --primary: #B6FF00;
-  --bg: #0A0A0A;
-  --card: #121212;
+  --bg: #f4f4f5;
+  --card: #ffffff;
 }
 
 body {
   font-family: "Inter", sans-serif;
   background-color: var(--bg);
-  color: white;
+  color: #18181b;
   overflow-x: hidden;
+}
+
+.dark body {
+  background-color: #09090b;
+  color: #f4f4f5;
 }
 
 .neon-glow {
@@ -104,9 +109,14 @@ body {
 }
 
 .glass {
-  background: rgba(18, 18, 18, 0.7);
+  background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(24, 24, 27, 0.08);
+}
+
+.dark .glass {
+  background: rgba(24, 24, 27, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 @media (prefers-reduced-motion: reduce) {

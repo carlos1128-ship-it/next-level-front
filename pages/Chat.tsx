@@ -3,22 +3,14 @@ import type { ChatMessage } from "../types";
 import { SendIcon, UserIcon } from "../components/icons";
 import { useAuth } from "../App";
 import { useToast } from "../components/Toast";
+import { EmptyState } from "../components/AsyncState";
 import { chatWithAi } from "../src/services/endpoints";
 
 const TypingIndicator = () => (
   <div className="flex items-center space-x-1 p-2">
-    <div
-      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-      style={{ animationDelay: "0s" }}
-    />
-    <div
-      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-      style={{ animationDelay: "0.2s" }}
-    />
-    <div
-      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-      style={{ animationDelay: "0.4s" }}
-    />
+    <div className="h-2 w-2 animate-bounce rounded-full bg-zinc-400" style={{ animationDelay: "0s" }} />
+    <div className="h-2 w-2 animate-bounce rounded-full bg-zinc-400" style={{ animationDelay: "0.2s" }} />
+    <div className="h-2 w-2 animate-bounce rounded-full bg-zinc-400" style={{ animationDelay: "0.4s" }} />
   </div>
 );
 
@@ -35,7 +27,7 @@ const Chat = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 1,
-      text: `Olá ${username || "usuário"}! Posso ajudar com a análise dos seus dados.`,
+      text: `Ola ${username || "usuario"}! Posso ajudar com a analise dos seus dados.`,
       sender: "ai",
     },
   ]);
@@ -76,54 +68,61 @@ const Chat = () => {
     }
   };
 
+  const safeMessages = Array.isArray(messages) ? messages : [];
+
   return (
-    <div className="h-[calc(100vh-120px)] lg:h-[calc(100vh-40px)] flex flex-col bg-black min-h-0 overflow-hidden">
-      <header className="p-4 border-b border-gray-800/50 flex justify-between items-center">
-        <h1 className="text-xl font-bold">Chat IA</h1>
+    <div className="flex h-[calc(100vh-120px)] min-h-0 flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white lg:h-[calc(100vh-40px)] dark:border-zinc-800 dark:bg-zinc-900">
+      <header className="flex items-center justify-between border-b border-zinc-200 p-4 dark:border-zinc-800">
+        <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Chat IA</h1>
         <button
           onClick={() => setMessages([])}
-          className="text-sm text-gray-400 hover:text-white"
+          className="text-sm text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
           type="button"
         >
           Limpar
         </button>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex items-start gap-3 ${
-              msg.sender === "user" ? "justify-end" : "justify-start"
-            }`}
-          >
-            {msg.sender === "ai" ? (
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#C5FF00] to-green-500 flex items-center justify-center font-bold text-black text-xs shrink-0">
-                AI
-              </div>
-            ) : null}
+      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
+        {safeMessages.length === 0 ? (
+          <EmptyState
+            title="Conversa vazia"
+            description="Envie uma pergunta para iniciar o chat com a IA."
+          />
+        ) : (
+          safeMessages.map((msg) => (
             <div
-              className={`max-w-[85%] md:max-w-[70%] p-3 rounded-2xl shadow-md ${
-                msg.sender === "user"
-                  ? "bg-gradient-to-br from-[#c5ff00] to-[#9fcc00] text-black rounded-br-none"
-                  : "bg-[#181818] text-white rounded-bl-none"
-              }`}
+              key={msg.id}
+              className={`flex items-start gap-3 ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
             >
-              <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{msg.text}</p>
-            </div>
-            {msg.sender === "user" ? (
-              <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center shrink-0">
-                <UserIcon className="w-5 h-5 text-white" />
+              {msg.sender === "ai" ? (
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-lime-300 to-lime-500 text-xs font-bold text-zinc-900">
+                  AI
+                </div>
+              ) : null}
+              <div
+                className={`max-w-[85%] rounded-2xl p-3 shadow-md md:max-w-[70%] ${
+                  msg.sender === "user"
+                    ? "rounded-br-none bg-gradient-to-br from-lime-300 to-lime-400 text-zinc-900"
+                    : "rounded-bl-none bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
+                }`}
+              >
+                <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{msg.text}</p>
               </div>
-            ) : null}
-          </div>
-        ))}
+              {msg.sender === "user" ? (
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-300 dark:bg-zinc-700">
+                  <UserIcon className="h-5 w-5 text-zinc-900 dark:text-zinc-100" />
+                </div>
+              ) : null}
+            </div>
+          ))
+        )}
         {isTyping ? (
-          <div className="flex items-start gap-3 justify-start">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#C5FF00] to-green-500 flex items-center justify-center font-bold text-black text-xs shrink-0">
+          <div className="flex items-start justify-start gap-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-lime-300 to-lime-500 text-xs font-bold text-zinc-900">
               AI
             </div>
-            <div className="bg-[#181818] rounded-2xl">
+            <div className="rounded-2xl bg-zinc-100 dark:bg-zinc-800">
               <TypingIndicator />
             </div>
           </div>
@@ -131,7 +130,7 @@ const Chat = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="p-4 border-t border-gray-800/50">
+      <div className="border-t border-zinc-200 p-4 dark:border-zinc-800">
         <div className="relative">
           <input
             type="text"
@@ -139,14 +138,15 @@ const Chat = () => {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             placeholder="Digite sua mensagem..."
-            className="w-full bg-[#111] border border-gray-700/50 rounded-full py-3 pl-5 pr-14 text-white focus:outline-none focus:border-[#C5FF00] transition"
+            className="w-full rounded-full border border-zinc-300 bg-white py-3 pl-5 pr-14 text-zinc-900 transition focus:border-lime-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
           />
           <button
+            type="button"
             onClick={sendMessage}
             disabled={isTyping}
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#C5FF00] text-black w-10 h-10 rounded-full flex items-center justify-center hover:opacity-90 transition neon-glow disabled:opacity-50"
+            className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-lime-300 text-zinc-900 transition hover:opacity-90 disabled:opacity-50"
           >
-            <SendIcon className="w-5 h-5" />
+            <SendIcon className="h-5 w-5" />
           </button>
         </div>
       </div>

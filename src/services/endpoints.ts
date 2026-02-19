@@ -12,7 +12,7 @@ export async function getDashboardSummary() {
 }
 
 export async function getTransactions() {
-  return (await api.get<TransactionItem[]>("/api/finance/transactions")).data;
+  return (await api.get<TransactionItem[]>("/transactions")).data;
 }
 
 export async function createTransaction(payload: {
@@ -22,15 +22,15 @@ export async function createTransaction(payload: {
   category?: string;
   manual?: boolean;
 }) {
-  return (await api.post<TransactionItem>("/api/finance/transactions", payload)).data;
+  return (await api.post<TransactionItem>("/transactions", payload)).data;
 }
 
 export async function getCompanies() {
-  return (await api.get<Company[]>("/api/company")).data;
+  return (await api.get<Company[]>("/companies")).data;
 }
 
 export async function createCompany(payload: { name: string; sector?: string }) {
-  return (await api.post<Company>("/api/company", payload)).data;
+  return (await api.post<Company>("/companies", payload)).data;
 }
 
 export async function analyzeData(payload: unknown, detailLevel: DetailLevel) {
@@ -66,7 +66,7 @@ export async function chatWithAi(payload: {
   detailLevel: DetailLevel;
 }) {
   return (
-    await api.post<{ response?: string; message?: string } | string>("/api/ai/chat", payload)
+    await api.post<{ response?: string; message?: string } | string>("/chat", payload)
   ).data;
 }
 

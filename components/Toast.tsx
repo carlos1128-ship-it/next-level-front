@@ -40,8 +40,8 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
           <div 
             key={toast.id} 
             className={`pointer-events-auto flex items-center gap-3 px-5 py-4 rounded-xl border glass shadow-2xl fade-in ${
-              toast.type === 'success' ? 'border-[#B6FF00]/30 text-white' : 
-              toast.type === 'error' ? 'border-red-500/30 text-white' : 'border-blue-500/30 text-white'
+              toast.type === 'success' ? 'border-[#B6FF00]/30 text-zinc-900 dark:text-zinc-100' : 
+              toast.type === 'error' ? 'border-red-500/30 text-zinc-900 dark:text-zinc-100' : 'border-blue-500/30 text-zinc-900 dark:text-zinc-100'
             }`}
           >
             <div className={`w-2 h-2 rounded-full ${
@@ -50,7 +50,7 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
             }`} />
             <span className="text-sm font-bold tracking-tight">{toast.message}</span>
             <button onClick={() => removeToast(toast.id)} className="ml-2 hover:opacity-70 transition-opacity">
-              <XIcon className="w-4 h-4 text-gray-500" />
+              <XIcon className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
             </button>
           </div>
         ))}

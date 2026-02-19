@@ -9,22 +9,26 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useToast } from "../components/Toast";
+import { EmptyState, ErrorState, LoadingState } from "../components/AsyncState";
 import { exportFinancialCsv, getTransactions } from "../src/services/endpoints";
 import type { TransactionItem } from "../src/types/domain";
 
 const Reports = () => {
   const { addToast } = useToast();
   const [transactions, setTransactions] = useState<TransactionItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = async () => {
     try {
       setLoading(true);
+      setLoadError(null);
       const data = await getTransactions();
       setTransactions(Array.isArray(data) ? data : []);
     } catch {
       setTransactions([]);
-      addToast("Falha ao carregar relatório.", "error");
+      setLoadError("Nao foi possivel carregar o relatorio.");
+      addToast("Falha ao carregar relatorio.", "error");
     } finally {
       setLoading(false);
     }
@@ -34,17 +38,20 @@ const Reports = () => {
     load();
   }, []);
 
+  const safeTransactions = Array.isArray(transactions) ? transactions : [];
+
   const chartData = useMemo(() => {
     const map = new Map<string, { name: string; Receita: number; Despesa: number }>();
-    transactions.forEach((tx) => {
+    safeTransactions.forEach((tx) => {
       const key = new Date(tx.createdAt).toLocaleDateString("pt-BR");
       if (!map.has(key)) map.set(key, { name: key, Receita: 0, Despesa: 0 });
-      const row = map.get(key)!;
+      const row = map.get(key);
+      if (!row) return;
       if (tx.type === "revenue") row.Receita += Number(tx.amount || 0);
       if (tx.type === "expense") row.Despesa += Number(tx.amount || 0);
     });
     return Array.from(map.values()).slice(-20);
-  }, [transactions]);
+  }, [safeTransactions]);
 
   const handleExport = async () => {
     try {
@@ -55,50 +62,60 @@ const Reports = () => {
       a.download = "relatorio-financeiro.csv";
       a.click();
       window.URL.revokeObjectURL(url);
-      addToast("Relatório exportado.", "success");
+      addToast("Relatorio exportado.", "success");
     } catch {
-      addToast("Falha ao exportar relatório.", "error");
+      addToast("Falha ao exportar relatorio.", "error");
     }
   };
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Relatórios</h1>
+      <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">Relatorios</h1>
       <div className="flex gap-3">
         <button
           onClick={load}
-          className="bg-[#111] border border-gray-700/50 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-800/50 transition"
+          type="button"
+          className="rounded-lg border border-zinc-300 bg-white px-4 py-2 font-bold text-zinc-800 transition hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
         >
           Atualizar
         </button>
         <button
           onClick={handleExport}
-          className="bg-[#C5FF00] text-black font-bold py-2 px-4 rounded-lg hover:opacity-90 transition"
+          type="button"
+          className="rounded-lg bg-lime-300 px-4 py-2 font-bold text-zinc-900 transition hover:opacity-90"
         >
           Exportar CSV
         </button>
       </div>
 
-      <div className="bg-[#111] p-4 rounded-lg border border-gray-800/50">
-        {loading ? (
-          <div className="h-[320px] grid place-items-center text-gray-400">Carregando...</div>
-        ) : chartData.length === 0 ? (
-          <div className="h-[320px] grid place-items-center text-gray-400">
-            Sem dados para relatório.
-          </div>
-        ) : (
+      {loading ? (
+        <LoadingState label="Carregando relatorio..." />
+      ) : loadError ? (
+        <ErrorState
+          title="Erro ao carregar relatorio"
+          description={loadError}
+          actionLabel="Tentar novamente"
+          onAction={load}
+        />
+      ) : chartData.length === 0 ? (
+        <EmptyState
+          title="Sem dados para relatorio"
+          description="Cadastre transacoes para gerar visualizacoes e exportacoes."
+        />
+      ) : (
+        <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
           <ResponsiveContainer width="100%" height={320}>
             <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="name" stroke="#9CA3AF" />
-              <YAxis stroke="#9CA3AF" />
-              <Tooltip contentStyle={{ backgroundColor: "#1F2937", border: "none" }} />
-              <Line type="monotone" dataKey="Receita" stroke="#C5FF00" />
-              <Line type="monotone" dataKey="Despesa" stroke="#f87171" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#a1a1aa" />
+              <XAxis dataKey="name" stroke="#71717a" />
+              <YAxis stroke="#71717a" />
+              <Tooltip />
+              <Line type="monotone" dataKey="Receita" stroke="#84cc16" />
+              <Line type="monotone" dataKey="Despesa" stroke="#ef4444" />
             </LineChart>
           </ResponsiveContainer>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

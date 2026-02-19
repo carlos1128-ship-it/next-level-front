@@ -113,12 +113,12 @@ const AppContent = () => {
   return (
     <HashRouter>
       <Suspense fallback={
-        <div className="bg-black text-white min-h-screen flex items-center justify-center">
+        <div className="bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 min-h-screen flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-3xl font-bold text-[#B6FF00] text-neon tracking-widest animate-pulse">
               NEXT LEVEL
             </h1>
-            <p className="mt-2 text-gray-400 text-xs tracking-widest uppercase">Pronto para avançar</p>
+            <p className="mt-2 text-zinc-500 dark:text-zinc-400 text-xs tracking-widest uppercase">Pronto para avançar</p>
           </div>
         </div>
       }>
@@ -157,3 +157,4 @@ const AppContent = () => {
 };
 
 export default App;
+

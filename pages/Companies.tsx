@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { PlusIcon } from "../components/icons";
 import { useToast } from "../components/Toast";
+import { EmptyState, ErrorState, LoadingState } from "../components/AsyncState";
 import { createCompany, getCompanies } from "../src/services/endpoints";
 import type { Company } from "../src/types/domain";
 
@@ -9,15 +10,22 @@ const Companies = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [name, setName] = useState("");
   const [sector, setSector] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loadingSubmit, setLoadingSubmit] = useState(false);
+  const [loadingPage, setLoadingPage] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const loadCompanies = async () => {
+    setLoadingPage(true);
+    setLoadError(null);
     try {
       const data = await getCompanies();
       setCompanies(Array.isArray(data) ? data : []);
     } catch {
       setCompanies([]);
+      setLoadError("Nao foi possivel carregar as empresas.");
       addToast("Falha ao carregar empresas.", "error");
+    } finally {
+      setLoadingPage(false);
     }
   };
 
@@ -28,63 +36,75 @@ const Companies = () => {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      addToast("Nome da empresa é obrigatório.", "info");
+      addToast("Nome da empresa e obrigatorio.", "info");
       return;
     }
     try {
-      setLoading(true);
+      setLoadingSubmit(true);
       await createCompany({ name: name.trim(), sector: sector.trim() || undefined });
       setName("");
       setSector("");
       addToast("Empresa criada com sucesso.", "success");
       await loadCompanies();
     } catch {
-      addToast("Não foi possível criar a empresa.", "error");
+      addToast("Nao foi possivel criar a empresa.", "error");
     } finally {
-      setLoading(false);
+      setLoadingSubmit(false);
     }
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Empresas</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">Empresas</h1>
       </div>
 
       <form
         onSubmit={onSubmit}
-        className="bg-[#111] border border-gray-800/50 rounded-lg p-4 grid grid-cols-1 md:grid-cols-3 gap-3"
+        className="grid grid-cols-1 gap-3 rounded-lg border border-zinc-200 bg-white p-4 md:grid-cols-3 dark:border-zinc-800 dark:bg-zinc-900"
       >
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Nome da empresa"
-          className="bg-[#181818] border border-white/10 rounded-lg px-3 py-2"
+          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-lime-300 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
         />
         <input
           value={sector}
           onChange={(e) => setSector(e.target.value)}
           placeholder="Setor"
-          className="bg-[#181818] border border-white/10 rounded-lg px-3 py-2"
+          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-lime-300 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
         />
         <button
           type="submit"
-          disabled={loading}
-          className="flex items-center justify-center gap-2 bg-[#C5FF00] text-black font-bold py-2 px-4 rounded-lg hover:opacity-90 transition disabled:opacity-50"
+          disabled={loadingSubmit}
+          className="flex items-center justify-center gap-2 rounded-lg bg-lime-300 px-4 py-2 font-bold text-zinc-900 transition hover:opacity-90 disabled:opacity-50"
         >
-          <PlusIcon className="w-5 h-5" />
-          {loading ? "Salvando..." : "Nova Empresa"}
+          <PlusIcon className="h-5 w-5" />
+          {loadingSubmit ? "Salvando..." : "Nova Empresa"}
         </button>
       </form>
 
-      <div className="bg-[#111] border border-gray-800/50 rounded-lg overflow-x-auto">
-        {companies.length === 0 ? (
-          <div className="p-6 text-sm text-gray-400 text-center">
-            Nenhuma empresa cadastrada.
-          </div>
-        ) : (
+      {loadingPage ? (
+        <LoadingState label="Carregando empresas..." />
+      ) : loadError ? (
+        <ErrorState
+          title="Erro ao carregar empresas"
+          description={loadError}
+          actionLabel="Tentar novamente"
+          onAction={loadCompanies}
+        />
+      ) : companies.length === 0 ? (
+        <EmptyState
+          title="Nenhuma empresa cadastrada"
+          description="Cadastre a primeira empresa para liberar os modulos de analise."
+          actionLabel="Criar primeira empresa"
+          onAction={() => document.querySelector<HTMLInputElement>("input")?.focus()}
+        />
+      ) : (
+        <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
           <table className="w-full text-left">
-            <thead className="border-b border-gray-800/50 text-sm text-gray-400">
+            <thead className="border-b border-zinc-200 text-sm text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
               <tr>
                 <th className="p-4">Nome</th>
                 <th className="p-4">Setor</th>
@@ -92,17 +112,17 @@ const Companies = () => {
               </tr>
             </thead>
             <tbody>
-              {companies.map((company) => (
-                <tr key={company.id} className="border-b border-gray-800/50 last:border-b-0">
-                  <td className="p-4 font-semibold">{company.name}</td>
-                  <td className="p-4">{company.sector || "-"}</td>
-                  <td className="p-4">{company.status || "Ativa"}</td>
+              {(Array.isArray(companies) ? companies : []).map((company) => (
+                <tr key={company.id} className="border-b border-zinc-100 last:border-b-0 dark:border-zinc-800">
+                  <td className="p-4 font-semibold text-zinc-900 dark:text-zinc-100">{company.name || "-"}</td>
+                  <td className="p-4 text-zinc-700 dark:text-zinc-300">{company.sector || "-"}</td>
+                  <td className="p-4 text-zinc-700 dark:text-zinc-300">{company.status || "Ativa"}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

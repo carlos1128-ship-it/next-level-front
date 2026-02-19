@@ -2,13 +2,13 @@ import React from 'react';
 import { PlusIcon } from '../components/icons';
 
 const PlanCard = ({ title, price, features, isPopular, buttonText }: { title: string; price: string; features: string[]; isPopular?: boolean; buttonText: string }) => (
-    <div className={`flex flex-col p-8 rounded-3xl border transition-all duration-300 ${isPopular ? 'bg-[#121212] border-[#B6FF00]/40 scale-105 shadow-2xl z-10' : 'bg-[#121212] border-white/5 hover:border-white/20'}`}>
+    <div className={`flex flex-col p-8 rounded-3xl border transition-all duration-300 ${isPopular ? 'bg-[#121212] border-[#B6FF00]/40 scale-105 shadow-2xl z-10' : 'bg-[#121212] border-zinc-200 dark:border-zinc-800 hover:border-white/20'}`}>
         {isPopular && <div className="bg-[#B6FF00] text-black text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full w-max mb-6 neon-glow mx-auto">Mais Popular</div>}
         <h3 className="text-2xl font-black tracking-tighter mb-2 text-center">{title}</h3>
         <div className="flex items-baseline justify-center mb-8">
-            <span className="text-sm font-bold text-gray-500 mr-1">R$</span>
+            <span className="text-sm font-bold text-zinc-500 dark:text-zinc-400 mr-1">R$</span>
             <span className="text-5xl font-black tracking-tighter">{price}</span>
-            <span className="text-sm font-bold text-gray-500 ml-1">/mês</span>
+            <span className="text-sm font-bold text-zinc-500 dark:text-zinc-400 ml-1">/mês</span>
         </div>
         <ul className="space-y-4 mb-10 flex-grow">
             {features.map((feature, i) => (
@@ -29,7 +29,7 @@ const Plans = () => {
         <div className="max-w-5xl mx-auto py-10">
             <div className="text-center mb-16">
                 <h1 className="text-5xl font-black tracking-tighter mb-4">Escolha seu Nível</h1>
-                <p className="text-gray-500 text-lg font-medium max-w-xl mx-auto">Potencialize sua operação com inteligência artificial de ponta e análise de dados estratégica.</p>
+                <p className="text-zinc-500 dark:text-zinc-400 text-lg font-medium max-w-xl mx-auto">Potencialize sua operação com inteligência artificial de ponta e análise de dados estratégica.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -71,9 +71,9 @@ const Plans = () => {
                 />
             </div>
 
-            <div className="mt-20 p-10 rounded-3xl bg-[#121212] border border-white/5 text-center">
+            <div className="mt-20 p-10 rounded-3xl bg-[#121212] border border-zinc-200 dark:border-zinc-800 text-center">
                 <h3 className="text-2xl font-black tracking-tighter mb-4">Precisa de algo sob medida?</h3>
-                <p className="text-gray-500 mb-8 max-w-lg mx-auto">Para operações de grande escala ou necessidades específicas de integração, nosso plano Enterprise é a solução ideal.</p>
+                <p className="text-zinc-500 dark:text-zinc-400 mb-8 max-w-lg mx-auto">Para operações de grande escala ou necessidades específicas de integração, nosso plano Enterprise é a solução ideal.</p>
                 <button className="border-b-2 border-[#B6FF00] text-[#B6FF00] font-black text-sm uppercase tracking-widest pb-1 hover:opacity-80 transition-all">
                     Solicitar Orçamento Customizado
                 </button>
