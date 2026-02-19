@@ -149,9 +149,9 @@ const FloatingActionButton = () => {
 const Layout = ({ children }: { children: ReactNode }) => (
   <div className="min-h-screen bg-black">
     <Sidebar />
-    <main className="lg:pl-64 min-h-screen flex flex-col">
+    <main className="lg:pl-64 min-h-screen flex flex-col min-h-0">
       <Header />
-      <div className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 fade-in">
+      <div className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 fade-in min-h-0">
         {children}
       </div>
     </main>

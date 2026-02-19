@@ -260,8 +260,8 @@ const Dashboard = () => {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-[#121212] p-8 rounded-3xl border border-white/5 relative overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-0">
+        <div className="lg:col-span-2 bg-[#121212] p-8 rounded-3xl border border-white/5 relative overflow-hidden min-h-0">
           <div className="flex justify-between items-center mb-8 relative z-10">
             <h3 className="text-xl font-black tracking-tighter">Atividade por Hora</h3>
             <div className="flex items-center gap-2">
@@ -269,7 +269,7 @@ const Dashboard = () => {
               <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Monitoramento Ativo</span>
             </div>
           </div>
-          <div className="w-full relative z-10">
+          <div className="w-full relative z-10 min-h-0">
              {data?.lineData?.length > 0 && (
                <ResponsiveContainer width="100%" height={320}>
                  <LineChart data={data.lineData}>
