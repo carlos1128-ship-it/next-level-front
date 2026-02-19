@@ -7,15 +7,16 @@ import { getMockData, Period } from '../mock/data';
 import { useToast } from '../components/Toast';
 import { api } from '../services/api';
 
-const AnimatedNumber = ({ value }: { value: string }) => {
+const AnimatedNumber = ({ value }: { value: string | number }) => {
   const [display, setDisplay] = useState('0');
   
   useEffect(() => {
-    const isCurrency = typeof value === 'string' && value.includes('R$');
-    const numericValue = parseFloat(value.replace(/[^0-9.,]/g, '').replace(',', '.'));
+    const normalizedValue = typeof value === 'string' ? value : String(value ?? '');
+    const isCurrency = normalizedValue.includes('R$');
+    const numericValue = parseFloat(normalizedValue.replace(/[^0-9.,]/g, '').replace(',', '.'));
     
     if (isNaN(numericValue)) {
-      setDisplay(value);
+      setDisplay(normalizedValue);
       return;
     }
 
@@ -95,22 +96,34 @@ const KpiCard: React.FC<KpiCardProps & { insight?: string }> = ({ title, value, 
 };
 
 const PIE_COLORS = ['#B6FF00', '#9AD400', '#7FAA00', '#638100'];
+type AnalyzeResponse =
+  | string
+  | {
+      analysis?: string;
+      insight?: string;
+      summary?: string;
+      message?: string;
+    };
 
 const Dashboard = () => {
   const { username } = useAuth();
   const { addToast } = useToast();
   const [period, setPeriod] = useState<Period>('Hoje');
   const [data, setData] = useState(getMockData('Hoje'));
-  const [aiInsights, setAiInsights] = useState<any>(null);
+  const [aiInsights, setAiInsights] = useState<AnalyzeResponse | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
 
   const analyzeDashboardData = async (salesData: unknown) => {
     try {
-      const response = await api.post('/ai/analyze', {
+      const response = await api.post<AnalyzeResponse>('/ai/analyze', {
         data: salesData,
       });
 
-      setAiInsights(response.data?.analysis ?? response.data);
+      setAiInsights(
+        typeof response.data === 'string'
+          ? response.data
+          : response.data.analysis ?? response.data
+      );
     } catch {
       setAiInsights(null);
     }
@@ -252,7 +265,7 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="h-[320px] w-full relative z-10">
-             <ResponsiveContainer width="100%" height="100%">
+             <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={300}>
                <LineChart data={data.lineData}>
                  <CartesianGrid strokeDasharray="4 4" stroke="#ffffff05" vertical={false} />
                  <XAxis dataKey="name" stroke="#777" fontSize={10} fontWeight="900" axisLine={false} tickLine={false} dy={10} />
@@ -272,7 +285,7 @@ const Dashboard = () => {
         <div className="bg-[#121212] p-8 rounded-3xl border border-white/5 flex flex-col items-center">
           <h3 className="text-xl font-black tracking-tighter mb-8 text-center">Mix de Produtos</h3>
           <div className="h-[260px] w-full">
-             <ResponsiveContainer width="100%" height="100%">
+             <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={220}>
                <PieChart>
                  <Pie 
                    data={data.pieData} 
