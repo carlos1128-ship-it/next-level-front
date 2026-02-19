@@ -122,7 +122,7 @@ const LoginPage = () => {
 
     try {
       setLoading(true);
-      const data = await apiRequest('/auth/login', {
+      const data = await apiRequest('/api/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       });
@@ -146,7 +146,7 @@ const LoginPage = () => {
 
     try {
       setLoading(true);
-      await apiRequest('/auth/register', {
+      await apiRequest('/api/auth/register', {
         method: 'POST',
         body: JSON.stringify({
           email,
