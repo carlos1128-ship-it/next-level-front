@@ -1,8 +1,6 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL;
-
-if (!API_BASE_URL) {
-  throw new Error("VITE_API_URL is not defined");
-}
+const API_BASE_URL =
+  (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/+$/, "") ||
+  "https://next-level-backend.onrender.com";
 
 export async function apiRequest(
   endpoint: string,
@@ -16,14 +14,21 @@ export async function apiRequest(
     ...options.headers,
   };
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+  const normalizedEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  const response = await fetch(`${API_BASE_URL}${normalizedEndpoint}`, {
     ...options,
     headers,
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Erro na requisição");
+    let errorMessage = "Erro na requisicao";
+    try {
+      const error = await response.json();
+      if (typeof error?.message === "string") errorMessage = error.message;
+    } catch {
+      // keep default message when backend returns non-JSON
+    }
+    throw new Error(errorMessage);
   }
 
   return response.json();
