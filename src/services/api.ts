@@ -1,5 +1,7 @@
-const API_BASE_URL =
-  (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/+$/, "") ||
+const env = import.meta.env as Record<string, string | undefined>;
+
+export const API_URL =
+  (env.VITE_API_URL || env.NEXT_PUBLIC_API_URL)?.replace(/\/+$/, "") ||
   "https://next-level-backend.onrender.com";
 
 function normalizeEndpoint(endpoint: string) {
@@ -40,7 +42,7 @@ export async function apiRequest<T = unknown>(
   endpoint: string,
   options: RequestInit = {}
 ) {
-  const response = await fetch(`${API_BASE_URL}${normalizeEndpoint(endpoint)}`, {
+  const response = await fetch(`${API_URL}${normalizeEndpoint(endpoint)}`, {
     ...options,
     headers: buildHeaders(options),
   });
@@ -54,7 +56,7 @@ export async function apiRequest<T = unknown>(
 }
 
 export async function apiDownload(endpoint: string) {
-  const response = await fetch(`${API_BASE_URL}${normalizeEndpoint(endpoint)}`, {
+  const response = await fetch(`${API_URL}${normalizeEndpoint(endpoint)}`, {
     method: "GET",
     headers: buildHeaders(),
   });
