@@ -110,7 +110,7 @@ const Dashboard = () => {
   const { addToast } = useToast();
   const [period, setPeriod] = useState<Period>('Hoje');
   const [data, setData] = useState(getMockData('Hoje'));
-  const [aiInsights, setAiInsights] = useState<AnalyzeResponse | null>(null);
+  const [aiInsights, setAiInsights] = useState<string>('');
   const [isUpdating, setIsUpdating] = useState(false);
 
   const analyzeDashboardData = async (salesData: unknown) => {
@@ -119,13 +119,21 @@ const Dashboard = () => {
         data: salesData,
       });
 
-      setAiInsights(
+      const extracted =
         typeof response.data === 'string'
           ? response.data
-          : response.data.analysis ?? response.data
-      );
+          : typeof response.data.analysis === 'string'
+            ? response.data.analysis
+            : typeof response.data.insight === 'string'
+              ? response.data.insight
+              : typeof response.data.summary === 'string'
+                ? response.data.summary
+                : typeof response.data.message === 'string'
+                  ? response.data.message
+                  : '';
+      setAiInsights(extracted);
     } catch {
-      setAiInsights(null);
+      setAiInsights('');
     }
   };
 
@@ -180,10 +188,7 @@ const Dashboard = () => {
     addToast("Seu PDF foi baixado com sucesso.", "success");
   };
 
-  const aiInsightText =
-    typeof aiInsights === 'string'
-      ? aiInsights
-      : aiInsights?.insight || aiInsights?.summary || aiInsights?.message || null;
+  const aiInsightText = aiInsights.trim();
 
   return (
     <div className="space-y-8">
