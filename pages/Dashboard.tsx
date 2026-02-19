@@ -110,7 +110,7 @@ const Dashboard = () => {
         data: salesData,
       });
 
-      setAiInsights(response.data);
+      setAiInsights(response.data?.analysis ?? response.data);
     } catch {
       setAiInsights(null);
     }
