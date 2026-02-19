@@ -269,49 +269,53 @@ const Dashboard = () => {
               <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Monitoramento Ativo</span>
             </div>
           </div>
-          <div className="h-[320px] w-full relative z-10">
-             <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={300}>
-               <LineChart data={data.lineData}>
-                 <CartesianGrid strokeDasharray="4 4" stroke="#ffffff05" vertical={false} />
-                 <XAxis dataKey="name" stroke="#777" fontSize={10} fontWeight="900" axisLine={false} tickLine={false} dy={10} />
-                 <YAxis stroke="#777" fontSize={10} fontWeight="900" axisLine={false} tickLine={false} />
-                 <Tooltip 
-                   contentStyle={{ backgroundColor: '#181818', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', fontSize: '10px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }} 
-                   itemStyle={{ color: '#B6FF00', fontWeight: 'bold' }}
-                   cursor={{ stroke: '#B6FF00', strokeWidth: 1, strokeDasharray: '3 3' }}
-                 />
-                 <Line type="monotone" dataKey="Vendas" stroke="#B6FF00" strokeWidth={4} dot={false} activeDot={{ r: 6, fill: '#B6FF00', stroke: '#000', strokeWidth: 2 }} />
-                 <Line type="monotone" dataKey="Picos" stroke="#3b82f6" strokeWidth={2} strokeDasharray="5 5" dot={false} />
-               </LineChart>
-             </ResponsiveContainer>
+          <div className="w-full relative z-10">
+             {data?.lineData?.length > 0 && (
+               <ResponsiveContainer width="100%" height={320}>
+                 <LineChart data={data.lineData}>
+                   <CartesianGrid strokeDasharray="4 4" stroke="#ffffff05" vertical={false} />
+                   <XAxis dataKey="name" stroke="#777" fontSize={10} fontWeight="900" axisLine={false} tickLine={false} dy={10} />
+                   <YAxis stroke="#777" fontSize={10} fontWeight="900" axisLine={false} tickLine={false} />
+                   <Tooltip 
+                     contentStyle={{ backgroundColor: '#181818', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', fontSize: '10px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }} 
+                     itemStyle={{ color: '#B6FF00', fontWeight: 'bold' }}
+                     cursor={{ stroke: '#B6FF00', strokeWidth: 1, strokeDasharray: '3 3' }}
+                   />
+                   <Line type="monotone" dataKey="Vendas" stroke="#B6FF00" strokeWidth={4} dot={false} activeDot={{ r: 6, fill: '#B6FF00', stroke: '#000', strokeWidth: 2 }} />
+                   <Line type="monotone" dataKey="Picos" stroke="#3b82f6" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+                 </LineChart>
+               </ResponsiveContainer>
+             )}
           </div>
         </div>
 
         <div className="bg-[#121212] p-8 rounded-3xl border border-white/5 flex flex-col items-center">
           <h3 className="text-xl font-black tracking-tighter mb-8 text-center">Mix de Produtos</h3>
-          <div className="h-[260px] w-full">
-             <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={220}>
-               <PieChart>
-                 <Pie 
-                   data={data.pieData} 
-                   cx="50%" 
-                   cy="50%" 
-                   innerRadius={65} 
-                   outerRadius={95} 
-                   paddingAngle={8} 
-                   dataKey="value"
-                   stroke="none"
-                 >
-                   {data.pieData.map((entry, index) => (
-                     <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} className="hover:opacity-80 transition-opacity cursor-pointer" />
-                   ))}
-                 </Pie>
-                 <Tooltip 
-                    contentStyle={{ backgroundColor: '#181818', border: 'none', borderRadius: '12px', fontSize: '10px', color: '#fff' }} 
-                    itemStyle={{ color: '#B6FF00' }}
-                 />
-               </PieChart>
-             </ResponsiveContainer>
+          <div className="w-full">
+             {data?.pieData?.length > 0 && (
+               <ResponsiveContainer width="100%" height={260}>
+                 <PieChart>
+                   <Pie 
+                     data={data.pieData} 
+                     cx="50%" 
+                     cy="50%" 
+                     innerRadius={65} 
+                     outerRadius={95} 
+                     paddingAngle={8} 
+                     dataKey="value"
+                     stroke="none"
+                   >
+                     {data.pieData.map((entry, index) => (
+                       <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} className="hover:opacity-80 transition-opacity cursor-pointer" />
+                     ))}
+                   </Pie>
+                   <Tooltip 
+                      contentStyle={{ backgroundColor: '#181818', border: 'none', borderRadius: '12px', fontSize: '10px', color: '#fff' }} 
+                      itemStyle={{ color: '#B6FF00' }}
+                   />
+                 </PieChart>
+               </ResponsiveContainer>
+             )}
           </div>
           <div className="mt-8 grid grid-cols-2 gap-x-6 gap-y-3 w-full">
             {data.pieData.map((item, i) => (
