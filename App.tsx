@@ -1,4 +1,4 @@
-import React, { useState, createContext, useContext, ReactNode, lazy, Suspense } from 'react';
+import React, { useEffect, useState, createContext, useContext, ReactNode, lazy, Suspense } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Chat from './pages/Chat';
@@ -8,7 +8,10 @@ import Integrations from './pages/Integrations';
 import Companies from './pages/Companies';
 import LoginPage from './pages/LoginPage';
 import { ToastProvider } from './components/Toast';
-import { PrivateRoute } from './src/services/routes/PrivateRoute';
+import { useDetailLevel } from './src/hooks/useDetailLevel';
+import { useTheme } from './src/hooks/useTheme';
+import type { DetailLevel } from './src/types/domain';
+import { getUserProfile } from './src/services/endpoints';
 
 // Lazy load pages with heavy dependencies
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -21,6 +24,11 @@ const Plans = lazy(() => import('./pages/Plans'));
 interface AuthContextType {
   isLoggedIn: boolean;
   username: string | null;
+  email: string | null;
+  detailLevel: DetailLevel;
+  theme: 'dark' | 'light';
+  setDetailLevel: (value: DetailLevel) => void;
+  setTheme: (value: 'dark' | 'light') => void;
   login: (name: string) => void;
   logout: () => void;
 }
@@ -36,8 +44,11 @@ export const useAuth = () => {
 };
 
 const AuthProvider = ({ children }: { children?: ReactNode }) => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(Boolean(localStorage.getItem('token')));
   const [username, setUsername] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
+  const { detailLevel, setDetailLevel } = useDetailLevel();
+  const { theme, setTheme } = useTheme();
 
   const login = (name: string) => {
     setIsLoggedIn(true);
@@ -47,16 +58,43 @@ const AuthProvider = ({ children }: { children?: ReactNode }) => {
   const logout = () => {
     setIsLoggedIn(false);
     setUsername(null);
+    setEmail(null);
+    localStorage.removeItem('token');
   };
 
-  const value = { isLoggedIn, username, login, logout };
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    getUserProfile()
+      .then((profile) => {
+        if (profile?.name) setUsername(profile.name);
+        if (profile?.email) setEmail(profile.email);
+        if (profile?.detailLevel) setDetailLevel(profile.detailLevel);
+        if (profile?.theme) setTheme(profile.theme);
+      })
+      .catch(() => {
+        // ignore profile bootstrap errors to avoid blocking app load
+      });
+  }, [isLoggedIn, setDetailLevel, setTheme]);
+
+  const value = {
+    isLoggedIn,
+    username,
+    email,
+    detailLevel,
+    theme,
+    setDetailLevel,
+    setTheme,
+    login,
+    logout,
+  };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 const ProtectedRoute = ({ children }: { children?: ReactNode }) => {
+  const token = localStorage.getItem('token');
   const { isLoggedIn } = useAuth();
-  return isLoggedIn ? <>{children}</> : <Navigate to="/login" />;
+  return isLoggedIn && token ? <>{children}</> : <Navigate to="/login" />;
 };
 
 const App = () => {
@@ -99,9 +137,7 @@ const AppContent = () => {
           <Route
             path="/dashboard"
             element={
-              <PrivateRoute>
-                <Dashboard />
-              </PrivateRoute>
+              <ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>
             }
           />
           <Route path="/reports" element={<ProtectedRoute><Layout><Reports /></Layout></ProtectedRoute>} />

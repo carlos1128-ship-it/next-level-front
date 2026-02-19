@@ -1,43 +1,126 @@
-
-import React from 'react';
-import { useAuth } from '../App';
+import React, { useEffect, useState } from "react";
+import { useAuth } from "../App";
+import { useToast } from "../components/Toast";
+import {
+  changePassword,
+  getUserProfile,
+  updateUserProfile,
+} from "../src/services/endpoints";
 
 const Profile = () => {
-    const { username, logout } = useAuth();
+  const { username, logout } = useAuth();
+  const { addToast } = useToast();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
 
-    return (
-        <div className="relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-64 h-64 bg-[#C5FF00] rounded-full mix-blend-lighten filter blur-3xl opacity-20 -translate-x-1/2 -translate-y-1/2"></div>
-            <div className="absolute bottom-0 right-0 w-64 h-64 bg-blue-500 rounded-full mix-blend-lighten filter blur-3xl opacity-20 translate-x-1/2 translate-y-1/2"></div>
-            
-            <h1 className="text-3xl font-bold mb-6">Perfil</h1>
-            
-            <div className="relative z-10 max-w-2xl mx-auto bg-[#111111]/50 backdrop-blur-sm border border-gray-800 rounded-lg p-8 text-center">
-                <div className="w-24 h-24 rounded-full bg-gray-700 mx-auto mb-4 flex items-center justify-center text-4xl font-bold">
-                    {username?.charAt(0).toUpperCase()}
-                </div>
-                <h2 className="text-2xl font-bold">{username}</h2>
-                <p className="text-gray-400">seu@email.com</p>
+  useEffect(() => {
+    getUserProfile()
+      .then((profile) => {
+        setName(profile.name || "");
+        setEmail(profile.email || "");
+      })
+      .catch(() => {
+        addToast("Falha ao carregar perfil.", "error");
+      });
+  }, []);
 
-                <div className="my-6 p-4 bg-gray-800/50 rounded-lg">
-                    <p className="text-lg">Plano Atual: <span className="font-bold text-[#C5FF00]">Premium</span></p>
-                    <button className="mt-2 text-sm text-[#C5FF00] hover:underline">Gerenciar Assinatura</button>
-                </div>
+  const onSaveProfile = async () => {
+    try {
+      setSavingProfile(true);
+      await updateUserProfile({ name, email });
+      addToast("Perfil atualizado com sucesso.", "success");
+    } catch {
+      addToast("Não foi possível atualizar o perfil.", "error");
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <button className="w-full p-3 bg-gray-800 rounded-lg hover:bg-gray-700 transition">Editar Perfil</button>
-                    <button className="w-full p-3 bg-gray-800 rounded-lg hover:bg-gray-700 transition">Trocar Senha</button>
-                </div>
+  const onChangePassword = async () => {
+    if (!currentPassword || !newPassword) {
+      addToast("Preencha senha atual e nova senha.", "info");
+      return;
+    }
+    try {
+      setSavingPassword(true);
+      await changePassword({ currentPassword, newPassword });
+      setCurrentPassword("");
+      setNewPassword("");
+      addToast("Senha alterada com sucesso.", "success");
+    } catch {
+      addToast("Não foi possível alterar a senha.", "error");
+    } finally {
+      setSavingPassword(false);
+    }
+  };
 
-                <button 
-                    onClick={logout}
-                    className="w-full mt-6 py-3 bg-red-600/50 border border-red-500 rounded-lg hover:bg-red-600 transition font-bold"
-                >
-                    Sair da Conta
-                </button>
-            </div>
+  return (
+    <div className="max-w-3xl mx-auto space-y-6">
+      <h1 className="text-3xl font-bold">Perfil</h1>
+
+      <div className="bg-[#111111]/50 backdrop-blur-sm border border-gray-800 rounded-xl p-6 space-y-4">
+        <div>
+          <label className="text-xs text-gray-400 uppercase">Nome</label>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full mt-1 bg-[#181818] border border-white/10 rounded-lg px-3 py-2"
+          />
         </div>
-    );
+        <div>
+          <label className="text-xs text-gray-400 uppercase">Email</label>
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full mt-1 bg-[#181818] border border-white/10 rounded-lg px-3 py-2"
+          />
+        </div>
+        <button
+          onClick={onSaveProfile}
+          disabled={savingProfile}
+          className="bg-[#B6FF00] text-black font-bold px-4 py-2 rounded-lg hover:opacity-90 disabled:opacity-50"
+        >
+          {savingProfile ? "Salvando..." : "Salvar Perfil"}
+        </button>
+      </div>
+
+      <div className="bg-[#111111]/50 backdrop-blur-sm border border-gray-800 rounded-xl p-6 space-y-4">
+        <h2 className="text-lg font-bold">Trocar Senha</h2>
+        <input
+          type="password"
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.target.value)}
+          placeholder="Senha atual"
+          className="w-full bg-[#181818] border border-white/10 rounded-lg px-3 py-2"
+        />
+        <input
+          type="password"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          placeholder="Nova senha"
+          className="w-full bg-[#181818] border border-white/10 rounded-lg px-3 py-2"
+        />
+        <button
+          onClick={onChangePassword}
+          disabled={savingPassword}
+          className="bg-white/10 border border-white/10 font-bold px-4 py-2 rounded-lg hover:bg-white/15 disabled:opacity-50"
+        >
+          {savingPassword ? "Atualizando..." : "Atualizar Senha"}
+        </button>
+      </div>
+
+      <button
+        onClick={logout}
+        className="w-full mt-2 py-3 bg-red-600/50 border border-red-500 rounded-lg hover:bg-red-600 transition font-bold"
+      >
+        Sair da Conta {username ? `(${username})` : ""}
+      </button>
+    </div>
+  );
 };
 
 export default Profile;
