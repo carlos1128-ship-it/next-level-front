@@ -2,14 +2,19 @@ const env = import.meta.env as Record<string, string | undefined>;
 const COMPANY_ID_STORAGE_KEY = "selectedCompanyId";
 
 function normalizeBaseUrl(url: string) {
-  return url.replace(/\/+$/, "").replace(/\/api$/i, "");
+  const trimmed = url.replace(/\/+$/, "");
+  return /\/api$/i.test(trimmed) ? trimmed : `${trimmed}/api`;
 }
 
-const configuredApiUrl = (env.VITE_API_URL || env.NEXT_PUBLIC_API_URL || "").trim();
+const runtimeApiUrl =
+  env.NEXT_PUBLIC_API_URL ||
+  (typeof process !== "undefined" ? process.env?.NEXT_PUBLIC_API_URL : undefined) ||
+  env.VITE_API_URL ||
+  "";
 
-export const API_URL =
-  (configuredApiUrl ? normalizeBaseUrl(configuredApiUrl) : "") ||
-  "https://next-level-backend.onrender.com";
+const configuredApiUrl = runtimeApiUrl.trim();
+
+export const API_URL = configuredApiUrl ? normalizeBaseUrl(configuredApiUrl) : "";
 
 function normalizeEndpoint(endpoint: string) {
   const withSlash = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
@@ -17,6 +22,9 @@ function normalizeEndpoint(endpoint: string) {
 }
 
 function buildUrl(endpoint: string) {
+  if (!API_URL) {
+    throw new Error("NEXT_PUBLIC_API_URL nao configurada.");
+  }
   return `${API_URL}${normalizeEndpoint(endpoint)}`;
 }
 
@@ -132,7 +140,6 @@ export async function apiRequest<T = unknown>(
 ) {
   const method = (options.method || "GET").toUpperCase();
   const selectedCompanyId = getSelectedCompanyId();
-  console.log("Enviando companyId:", selectedCompanyId);
 
   if (!selectedCompanyId && !endpointAllowsMissingCompany(endpoint)) {
     throw new Error("Selecione uma empresa primeiro");
@@ -156,6 +163,7 @@ export async function apiRequest<T = unknown>(
 
   const response = await fetch(url, {
     ...requestOptions,
+    credentials: "include",
     headers: buildHeaders(requestOptions),
   });
   logRequest(method, url, response.status);
@@ -173,7 +181,6 @@ export async function apiRequest<T = unknown>(
 export async function apiDownload(endpoint: string) {
   const method = "GET";
   const selectedCompanyId = getSelectedCompanyId();
-  console.log("Enviando companyId:", selectedCompanyId);
 
   if (!selectedCompanyId && !endpointAllowsMissingCompany(endpoint)) {
     throw new Error("Selecione uma empresa primeiro");
@@ -186,6 +193,7 @@ export async function apiDownload(endpoint: string) {
 
   const response = await fetch(url, {
     method: "GET",
+    credentials: "include",
     headers: buildHeaders(),
   });
   logRequest(method, url, response.status);
