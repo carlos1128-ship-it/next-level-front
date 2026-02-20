@@ -10,6 +10,7 @@ import {
 } from "recharts";
 import { useToast } from "../components/Toast";
 import { createTransaction, getTransactions } from "../src/services/endpoints";
+import { getErrorMessage } from "../src/services/api";
 import { EmptyState, ErrorState, LoadingState } from "../components/AsyncState";
 import type { TransactionItem } from "../src/types/domain";
 
@@ -37,10 +38,11 @@ const FinancialFlow = () => {
     try {
       const data = await getTransactions();
       setTransactions(Array.isArray(data) ? data : []);
-    } catch {
+    } catch (error) {
       setTransactions([]);
-      setLoadError("Nao foi possivel carregar as transacoes.");
-      addToast("Falha ao carregar transacoes.", "error");
+      const message = getErrorMessage(error, "Nao foi possivel carregar as transacoes.");
+      setLoadError(message);
+      addToast(message, "error");
     } finally {
       setLoadingPage(false);
     }
@@ -96,8 +98,8 @@ const FinancialFlow = () => {
       await loadTransactions();
       notifyDashboardUpdate();
       addToast("Transacao criada.", "success");
-    } catch {
-      addToast("Falha ao criar transacao.", "error");
+    } catch (error) {
+      addToast(getErrorMessage(error, "Falha ao criar transacao."), "error");
     } finally {
       setLoadingSubmit(false);
     }
@@ -135,8 +137,8 @@ const FinancialFlow = () => {
       await loadTransactions();
       notifyDashboardUpdate();
       addToast("Lancamento manual salvo.", "success");
-    } catch {
-      addToast("Falha ao salvar lancamento manual.", "error");
+    } catch (error) {
+      addToast(getErrorMessage(error, "Falha ao salvar lancamento manual."), "error");
     } finally {
       setLoadingSubmit(false);
     }

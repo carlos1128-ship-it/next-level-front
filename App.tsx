@@ -11,7 +11,8 @@ import { ToastProvider } from './components/Toast';
 import { useDetailLevel } from './src/hooks/useDetailLevel';
 import { useTheme } from './src/hooks/useTheme';
 import type { DetailLevel } from './src/types/domain';
-import { getUserProfile } from './src/services/endpoints';
+import { getCompanies, getUserProfile } from './src/services/endpoints';
+import type { Company } from './src/types/domain';
 
 // Lazy load pages with heavy dependencies
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -25,8 +26,10 @@ interface AuthContextType {
   isLoggedIn: boolean;
   username: string | null;
   email: string | null;
+  selectedCompanyId: string | null;
   detailLevel: DetailLevel;
   theme: 'dark' | 'light';
+  setSelectedCompanyId: (value: string | null) => void;
   setDetailLevel: (value: DetailLevel) => void;
   setTheme: (value: 'dark' | 'light') => void;
   login: (name: string) => void;
@@ -34,6 +37,8 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
+const COMPANY_ID_STORAGE_KEY = "selectedCompanyId";
+const getCompanyId = (company: Partial<Company> | null | undefined) => company?.id || company?._id || null;
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -47,8 +52,20 @@ const AuthProvider = ({ children }: { children?: ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(Boolean(localStorage.getItem('token')));
   const [username, setUsername] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
+  const [selectedCompanyId, setSelectedCompanyIdState] = useState<string | null>(
+    localStorage.getItem(COMPANY_ID_STORAGE_KEY)
+  );
   const { detailLevel, setDetailLevel } = useDetailLevel();
   const { theme, setTheme } = useTheme();
+
+  const setSelectedCompanyId = (value: string | null) => {
+    setSelectedCompanyIdState(value);
+    if (value) {
+      localStorage.setItem(COMPANY_ID_STORAGE_KEY, value);
+      return;
+    }
+    localStorage.removeItem(COMPANY_ID_STORAGE_KEY);
+  };
 
   const login = (name: string) => {
     setIsLoggedIn(true);
@@ -59,6 +76,7 @@ const AuthProvider = ({ children }: { children?: ReactNode }) => {
     setIsLoggedIn(false);
     setUsername(null);
     setEmail(null);
+    setSelectedCompanyId(null);
     localStorage.removeItem('token');
   };
 
@@ -76,12 +94,33 @@ const AuthProvider = ({ children }: { children?: ReactNode }) => {
       });
   }, [isLoggedIn, setDetailLevel, setTheme]);
 
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    getCompanies()
+      .then((companies) => {
+        const list = Array.isArray(companies) ? companies : [];
+        if (!list.length) {
+          setSelectedCompanyId(null);
+          return;
+        }
+
+        const existing = list.find((company) => getCompanyId(company) === selectedCompanyId);
+        if (existing) return;
+        setSelectedCompanyId(getCompanyId(list[0]));
+      })
+      .catch(() => {
+        // ignore company bootstrap errors to avoid blocking app load
+      });
+  }, [isLoggedIn]);
+
   const value = {
     isLoggedIn,
     username,
     email,
+    selectedCompanyId,
     detailLevel,
     theme,
+    setSelectedCompanyId,
     setDetailLevel,
     setTheme,
     login,

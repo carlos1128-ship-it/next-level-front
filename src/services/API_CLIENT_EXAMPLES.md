@@ -15,7 +15,7 @@ await fetch(`${API_BASE_URL}/companies`, {
   body: JSON.stringify({ name: "Minha Empresa", sector: "Servicos" }),
 });
 
-await fetch(`${API_BASE_URL}/transactions`, {
+await fetch(`${API_BASE_URL}/financial`, {
   method: "POST",
   headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
   body: JSON.stringify({ type: "revenue", amount: 1000, description: "Venda" }),
@@ -46,7 +46,7 @@ http.interceptors.request.use((config) => {
 
 await http.post("/auth/login", { email, password });
 await http.post("/companies", { name, sector });
-await http.post("/transactions", { type, amount, description });
+await http.post("/financial", { type, amount, description });
 await http.post("/chat", { message, detailLevel });
 ```
 

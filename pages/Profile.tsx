@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../App";
 import { useToast } from "../components/Toast";
+import { getErrorMessage } from "../src/services/api";
 import {
   changePassword,
   getUserProfile,
@@ -23,8 +24,8 @@ const Profile = () => {
         setName(profile.name || "");
         setEmail(profile.email || "");
       })
-      .catch(() => {
-        addToast("Falha ao carregar perfil.", "error");
+      .catch((error) => {
+        addToast(getErrorMessage(error, "Falha ao carregar perfil."), "error");
       });
   }, []);
 
@@ -33,8 +34,8 @@ const Profile = () => {
       setSavingProfile(true);
       await updateUserProfile({ name, email });
       addToast("Perfil atualizado com sucesso.", "success");
-    } catch {
-      addToast("Não foi possível atualizar o perfil.", "error");
+    } catch (error) {
+      addToast(getErrorMessage(error, "Nao foi possivel atualizar o perfil."), "error");
     } finally {
       setSavingProfile(false);
     }
@@ -51,8 +52,8 @@ const Profile = () => {
       setCurrentPassword("");
       setNewPassword("");
       addToast("Senha alterada com sucesso.", "success");
-    } catch {
-      addToast("Não foi possível alterar a senha.", "error");
+    } catch (error) {
+      addToast(getErrorMessage(error, "Nao foi possivel alterar a senha."), "error");
     } finally {
       setSavingPassword(false);
     }

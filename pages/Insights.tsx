@@ -8,7 +8,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
-import { api } from "../services/api";
+import { api, getErrorMessage } from "../services/api";
 import { useToast } from "../components/Toast";
 import { EmptyState, ErrorState, LoadingState } from "../components/AsyncState";
 
@@ -70,10 +70,11 @@ const Insights = () => {
         : [];
 
       setHistoryInsights(parsed);
-    } catch {
+    } catch (error) {
       setHistoryInsights([]);
-      setLoadError("Nao foi possivel carregar os insights.");
-      addToast("Falha ao carregar insights.", "error");
+      const message = getErrorMessage(error, "Nao foi possivel carregar os insights.");
+      setLoadError(message);
+      addToast(message, "error");
     } finally {
       setLoading(false);
     }

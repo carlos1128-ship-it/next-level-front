@@ -9,6 +9,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useToast } from "../components/Toast";
+import { getErrorMessage } from "../src/services/api";
 import { EmptyState, ErrorState, LoadingState } from "../components/AsyncState";
 import { exportFinancialCsv, getTransactions } from "../src/services/endpoints";
 import type { TransactionItem } from "../src/types/domain";
@@ -25,10 +26,11 @@ const Reports = () => {
       setLoadError(null);
       const data = await getTransactions();
       setTransactions(Array.isArray(data) ? data : []);
-    } catch {
+    } catch (error) {
       setTransactions([]);
-      setLoadError("Nao foi possivel carregar o relatorio.");
-      addToast("Falha ao carregar relatorio.", "error");
+      const message = getErrorMessage(error, "Nao foi possivel carregar o relatorio.");
+      setLoadError(message);
+      addToast(message, "error");
     } finally {
       setLoading(false);
     }
@@ -63,8 +65,8 @@ const Reports = () => {
       a.click();
       window.URL.revokeObjectURL(url);
       addToast("Relatorio exportado.", "success");
-    } catch {
-      addToast("Falha ao exportar relatorio.", "error");
+    } catch (error) {
+      addToast(getErrorMessage(error, "Falha ao exportar relatorio."), "error");
     }
   };
 

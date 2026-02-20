@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "../App";
 import { useToast } from "../components/Toast";
+import { getErrorMessage } from "../src/services/api";
 import { updateUserProfile } from "../src/services/endpoints";
 import type { DetailLevel } from "../src/types/domain";
 
@@ -16,9 +17,9 @@ const Settings = () => {
       setSaving(true);
       await updateUserProfile({ theme: nextTheme });
       addToast("Tema atualizado.", "success");
-    } catch {
+    } catch (error) {
       setTheme(theme);
-      addToast("Falha ao salvar tema.", "error");
+      addToast(getErrorMessage(error, "Falha ao salvar tema."), "error");
     } finally {
       setSaving(false);
     }
@@ -30,10 +31,10 @@ const Settings = () => {
     try {
       setSaving(true);
       await updateUserProfile({ detailLevel: value });
-      addToast("Nível de detalhamento atualizado.", "success");
-    } catch {
+      addToast("Nivel de detalhamento atualizado.", "success");
+    } catch (error) {
       setDetailLevel(previous);
-      addToast("Falha ao salvar nível de detalhamento.", "error");
+      addToast(getErrorMessage(error, "Falha ao salvar nivel de detalhamento."), "error");
     } finally {
       setSaving(false);
     }
@@ -41,7 +42,7 @@ const Settings = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <h1 className="text-4xl font-black tracking-tighter">Configurações</h1>
+      <h1 className="text-4xl font-black tracking-tighter">Configuracoes</h1>
 
       <div className="bg-[#121212] p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-5">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
@@ -60,7 +61,7 @@ const Settings = () => {
 
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
           <div>
-            <h2 className="font-bold">Nível de Detalhamento</h2>
+            <h2 className="font-bold">Nivel de Detalhamento</h2>
             <p className="text-xs text-zinc-500 dark:text-zinc-400">
               Define o tamanho e profundidade das respostas da IA.
             </p>

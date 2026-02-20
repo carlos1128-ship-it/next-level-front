@@ -2,11 +2,17 @@ import React, { useEffect, useState } from "react";
 import { PlusIcon } from "../components/icons";
 import { useToast } from "../components/Toast";
 import { EmptyState, ErrorState, LoadingState } from "../components/AsyncState";
+import { getErrorMessage } from "../src/services/api";
 import { createCompany, getCompanies } from "../src/services/endpoints";
 import type { Company } from "../src/types/domain";
+import { useAuth } from "../App";
+
+const getCompanyId = (company: Partial<Company> | null | undefined) =>
+  company?.id || company?._id || null;
 
 const Companies = () => {
   const { addToast } = useToast();
+  const { selectedCompanyId, setSelectedCompanyId } = useAuth();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [name, setName] = useState("");
   const [sector, setSector] = useState("");
@@ -19,11 +25,27 @@ const Companies = () => {
     setLoadError(null);
     try {
       const data = await getCompanies();
-      setCompanies(Array.isArray(data) ? data : []);
-    } catch {
+      const list = (Array.isArray(data) ? data : []).filter(
+        (company): company is Company => Boolean(getCompanyId(company))
+      );
+      setCompanies(list);
+
+      if (!list.length) {
+        setSelectedCompanyId(null);
+        return list;
+      }
+
+      const activeExists = list.some((company) => getCompanyId(company) === selectedCompanyId);
+      if (!activeExists) {
+        setSelectedCompanyId(getCompanyId(list[0]));
+      }
+      return list;
+    } catch (error) {
       setCompanies([]);
-      setLoadError("Nao foi possivel carregar as empresas.");
-      addToast("Falha ao carregar empresas.", "error");
+      const message = getErrorMessage(error, "Nao foi possivel carregar as empresas.");
+      setLoadError(message);
+      addToast(message, "error");
+      return [];
     } finally {
       setLoadingPage(false);
     }
@@ -41,16 +63,36 @@ const Companies = () => {
     }
     try {
       setLoadingSubmit(true);
-      await createCompany({ name: name.trim(), sector: sector.trim() || undefined });
+      const created = await createCompany({ name: name.trim(), sector: sector.trim() || undefined });
+      const createdCompanyId = getCompanyId(created);
+      if (!createdCompanyId) {
+        throw new Error("Empresa criada sem ID no retorno da API.");
+      }
+
+      setSelectedCompanyId(createdCompanyId);
       setName("");
       setSector("");
-      addToast("Empresa criada com sucesso.", "success");
-      await loadCompanies();
-    } catch {
-      addToast("Nao foi possivel criar a empresa.", "error");
+      const refreshedCompanies = await loadCompanies();
+      const existsInList = refreshedCompanies.some(
+        (company) => getCompanyId(company) === createdCompanyId
+      );
+
+      if (!existsInList) {
+        throw new Error("Empresa nao foi encontrada na listagem apos criar.");
+      }
+
+      addToast("Empresa criada com sucesso e selecionada como ativa.", "success");
+    } catch (error) {
+      addToast(getErrorMessage(error, "Nao foi possivel criar a empresa."), "error");
     } finally {
       setLoadingSubmit(false);
     }
+  };
+
+  const selectCompany = (companyId: string | null) => {
+    if (!companyId) return;
+    setSelectedCompanyId(companyId);
+    addToast("Empresa ativa atualizada.", "success");
   };
 
   return (
@@ -109,14 +151,30 @@ const Companies = () => {
                 <th className="p-4">Nome</th>
                 <th className="p-4">Setor</th>
                 <th className="p-4">Status</th>
+                <th className="p-4 text-right">Acao</th>
               </tr>
             </thead>
             <tbody>
               {(Array.isArray(companies) ? companies : []).map((company) => (
-                <tr key={company.id} className="border-b border-zinc-100 last:border-b-0 dark:border-zinc-800">
+                <tr key={getCompanyId(company) || company.name} className="border-b border-zinc-100 last:border-b-0 dark:border-zinc-800">
                   <td className="p-4 font-semibold text-zinc-900 dark:text-zinc-100">{company.name || "-"}</td>
                   <td className="p-4 text-zinc-700 dark:text-zinc-300">{company.sector || "-"}</td>
-                  <td className="p-4 text-zinc-700 dark:text-zinc-300">{company.status || "Ativa"}</td>
+                  <td className="p-4 text-zinc-700 dark:text-zinc-300">
+                    {getCompanyId(company) === selectedCompanyId ? "Ativa" : company.status || "Disponivel"}
+                  </td>
+                  <td className="p-4 text-right">
+                    <button
+                      type="button"
+                      onClick={() => selectCompany(getCompanyId(company))}
+                      className={`rounded-md px-3 py-1.5 text-xs font-bold transition ${
+                        getCompanyId(company) === selectedCompanyId
+                          ? "bg-lime-300 text-zinc-900"
+                          : "border border-zinc-300 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                      }`}
+                    >
+                      {getCompanyId(company) === selectedCompanyId ? "Selecionada" : "Selecionar"}
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

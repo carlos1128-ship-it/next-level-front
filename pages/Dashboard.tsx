@@ -21,6 +21,7 @@ import {
   LightbulbIcon,
 } from "../components/icons";
 import { useToast } from "../components/Toast";
+import { getErrorMessage } from "../src/services/api";
 import {
   analyzeData,
   exportFinancialCsv,
@@ -137,10 +138,10 @@ const Dashboard = () => {
       };
       setSummary(normalized);
       await runAnalyze(normalized);
-    } catch {
+    } catch (error) {
       setSummary(EMPTY_SUMMARY);
       setAiInsight("");
-      addToast("Não foi possível carregar o dashboard.", "error");
+      addToast(getErrorMessage(error, "Nao foi possivel carregar o dashboard."), "error");
     } finally {
       setIsUpdating(false);
     }
@@ -168,8 +169,8 @@ const Dashboard = () => {
       a.click();
       window.URL.revokeObjectURL(url);
       addToast("CSV exportado com sucesso.", "success");
-    } catch {
-      addToast("Falha ao exportar CSV.", "error");
+    } catch (error) {
+      addToast(getErrorMessage(error, "Falha ao exportar CSV."), "error");
     }
   };
 
@@ -367,4 +368,6 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
+
 

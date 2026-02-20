@@ -19,7 +19,8 @@ export interface TransactionItem {
 }
 
 export interface Company {
-  id: string;
+  id?: string;
+  _id?: string;
   name: string;
   sector?: string;
   status?: string;
