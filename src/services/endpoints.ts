@@ -30,11 +30,17 @@ export async function createTransaction(payload: {
 }
 
 export async function getCompanies() {
-  const data = (await api.get<Company[] | { companies?: Company[] }>("/companies")).data;
+  const data = (
+    await api.get<Company | Company[] | { companies?: Company[]; company?: Company }>("/companies")
+  ).data;
   const companies = Array.isArray(data)
     ? data
+    : data && typeof data === "object" && !Array.isArray(data) && extractCompanyId(data as Company)
+      ? [data as Company]
     : Array.isArray((data as { companies?: Company[] })?.companies)
       ? (data as { companies?: Company[] }).companies
+      : (data as { company?: Company })?.company && extractCompanyId((data as { company?: Company }).company)
+        ? [(data as { company: Company }).company]
       : [];
 
   return companies.filter((company) => Boolean(extractCompanyId(company)));
