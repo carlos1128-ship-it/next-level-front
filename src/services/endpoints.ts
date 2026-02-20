@@ -12,11 +12,11 @@ function extractCompanyId(company: Partial<Company> | null | undefined) {
 }
 
 export async function getDashboardSummary() {
-  return (await api.get<Partial<DashboardSummary>>("/financial/summary")).data;
+  return (await api.get<Partial<DashboardSummary>>("/dashboard/summary")).data;
 }
 
 export async function getTransactions() {
-  return (await api.get<TransactionItem[]>("/financial")).data;
+  return (await api.get<TransactionItem[]>("/financial/transactions")).data;
 }
 
 export async function createTransaction(payload: {
@@ -26,7 +26,7 @@ export async function createTransaction(payload: {
   category?: string;
   manual?: boolean;
 }) {
-  return (await api.post<TransactionItem>("/financial", payload)).data;
+  return (await api.post<TransactionItem>("/financial/transactions", payload)).data;
 }
 
 export async function getCompanies() {
@@ -89,5 +89,5 @@ export async function chatWithAi(payload: {
 }
 
 export async function exportFinancialCsv() {
-  return apiDownload("/financial/export");
+  return apiDownload("/export/financial");
 }
