@@ -57,7 +57,7 @@ const Insights = () => {
     try {
       setLoading(true);
       setLoadError(null);
-      const { data } = await api.get("/api/ai/history");
+      const { data } = await api.get("/ai/history");
       const parsed = Array.isArray(data)
         ? data
             .map((item: any) => ({

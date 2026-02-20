@@ -2,7 +2,7 @@ const env = import.meta.env as Record<string, string | undefined>;
 
 export const API_URL =
   (env.VITE_API_URL || env.NEXT_PUBLIC_API_URL)?.replace(/\/+$/, "") ||
-  "https://next-level-backend.onrender.com";
+  "https://next-level-backend.onrender.com/api";
 
 function normalizeEndpoint(endpoint: string) {
   return endpoint.startsWith("/") ? endpoint : `/${endpoint}`;

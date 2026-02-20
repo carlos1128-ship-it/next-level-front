@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../App';
 import { EyeIcon, EyeOffIcon } from '../components/icons';
-import { API_URL, apiRequest } from '../services/api';
+import { api, apiRequest } from '../services/api';
 
 const Splash = ({ onDone }: { onDone: () => void }) => {
   const brand = "NEXT LEVEL";
@@ -122,18 +122,10 @@ const LoginPage = () => {
 
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        const payload = await response.json().catch(() => null);
-        throw new Error(payload?.message || 'Erro ao fazer login');
-      }
-
-      const data = await response.json();
+      const { data } = await api.post<{ accessToken: string; user?: { name?: string } }>(
+        '/auth/login',
+        { email, password }
+      );
       localStorage.setItem('token', data.accessToken);
       login(data.user?.name || email);
     } catch (err: any) {
@@ -154,7 +146,7 @@ const LoginPage = () => {
 
     try {
       setLoading(true);
-      await apiRequest('/api/auth/register', {
+      await apiRequest('/auth/register', {
         method: 'POST',
         body: JSON.stringify({
           email,

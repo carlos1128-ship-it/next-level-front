@@ -8,7 +8,7 @@ import type {
 } from "../types/domain";
 
 export async function getDashboardSummary() {
-  return (await api.get<Partial<DashboardSummary>>("/api/dashboard/summary")).data;
+  return (await api.get<Partial<DashboardSummary>>("/dashboard/summary")).data;
 }
 
 export async function getTransactions() {
@@ -36,18 +36,18 @@ export async function createCompany(payload: { name: string; sector?: string }) 
 export async function analyzeData(payload: unknown, detailLevel: DetailLevel) {
   return (
     await api.post<{ analysis?: string; insight?: string; message?: string } | string>(
-      "/api/ai/analyze",
+      "/ai/analyze",
       { data: payload, detailLevel }
     )
   ).data;
 }
 
 export async function getUserProfile() {
-  return (await api.get<UserProfile>("/api/user/profile")).data;
+  return (await api.get<UserProfile>("/user/profile")).data;
 }
 
 export async function updateUserProfile(payload: Partial<UserProfile>) {
-  return (await api.patch<UserProfile>("/api/user/profile", payload)).data;
+  return (await api.patch<UserProfile>("/user/profile", payload)).data;
 }
 
 export async function changePassword(payload: {
@@ -55,9 +55,9 @@ export async function changePassword(payload: {
   newPassword: string;
 }) {
   try {
-    return (await api.patch("/api/user/password", payload)).data;
+    return (await api.patch("/user/password", payload)).data;
   } catch {
-    return (await api.patch("/api/user/change-password", payload)).data;
+    return (await api.patch("/user/change-password", payload)).data;
   }
 }
 
@@ -71,5 +71,5 @@ export async function chatWithAi(payload: {
 }
 
 export async function exportFinancialCsv() {
-  return apiDownload("/api/export/financial");
+  return apiDownload("/export/financial");
 }
