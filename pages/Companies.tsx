@@ -19,6 +19,7 @@ const Companies = () => {
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [loadingPage, setLoadingPage] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
 
   const loadCompanies = async () => {
     setLoadingPage(true);
@@ -72,17 +73,10 @@ const Companies = () => {
       setSelectedCompanyId(createdCompanyId);
       setName("");
       setSector("");
-      const refreshedCompanies = await loadCompanies();
+      setShowForm(false);
+      await loadCompanies();
       window.dispatchEvent(new Event("companies:updated"));
-      const existsInList = refreshedCompanies.some(
-        (company) => getCompanyId(company) === createdCompanyId
-      );
-
-      if (!existsInList) {
-        throw new Error("Empresa nao foi encontrada na listagem apos criar.");
-      }
-
-      addToast("Empresa criada com sucesso e selecionada como ativa.", "success");
+      addToast("Empresa criada com sucesso.", "success");
     } catch (error) {
       addToast(getErrorMessage(error, "Nao foi possivel criar a empresa."), "error");
     } finally {
@@ -99,34 +93,42 @@ const Companies = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">Empresas</h1>
+        <h1 className="text-6xl font-black tracking-tighter text-zinc-100">Empresas</h1>
+        <button
+          type="button"
+          onClick={() => setShowForm((v) => !v)}
+          className="flex items-center gap-2 rounded-2xl bg-lime-400 px-6 py-3 text-lg font-black text-zinc-900 transition hover:opacity-90"
+        >
+          <PlusIcon className="h-5 w-5" /> Nova Empresa
+        </button>
       </div>
 
-      <form
-        onSubmit={onSubmit}
-        className="grid grid-cols-1 gap-3 rounded-lg border border-zinc-200 bg-white p-4 md:grid-cols-3 dark:border-zinc-800 dark:bg-zinc-900"
-      >
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Nome da empresa"
-          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-lime-300 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-        />
-        <input
-          value={sector}
-          onChange={(e) => setSector(e.target.value)}
-          placeholder="Setor"
-          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-lime-300 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-        />
-        <button
-          type="submit"
-          disabled={loadingSubmit}
-          className="flex items-center justify-center gap-2 rounded-lg bg-lime-300 px-4 py-2 font-bold text-zinc-900 transition hover:opacity-90 disabled:opacity-50"
+      {showForm ? (
+        <form
+          onSubmit={onSubmit}
+          className="grid grid-cols-1 gap-3 rounded-2xl border border-zinc-900 bg-zinc-950 p-4 md:grid-cols-3"
         >
-          <PlusIcon className="h-5 w-5" />
-          {loadingSubmit ? "Salvando..." : "Nova Empresa"}
-        </button>
-      </form>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Nome da empresa"
+            className="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-lime-400"
+          />
+          <input
+            value={sector}
+            onChange={(e) => setSector(e.target.value)}
+            placeholder="Setor"
+            className="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-lime-400"
+          />
+          <button
+            type="submit"
+            disabled={loadingSubmit}
+            className="rounded-xl bg-lime-400 px-4 py-2 font-black text-zinc-900 transition hover:opacity-90 disabled:opacity-50"
+          >
+            {loadingSubmit ? "Salvando..." : "Salvar"}
+          </button>
+        </form>
+      ) : null}
 
       {loadingPage ? (
         <LoadingState label="Carregando empresas..." />
@@ -142,42 +144,43 @@ const Companies = () => {
           title="Nenhuma empresa cadastrada"
           description="Cadastre a primeira empresa para liberar os modulos de analise."
           actionLabel="Criar primeira empresa"
-          onAction={() => document.querySelector<HTMLInputElement>("input")?.focus()}
+          onAction={() => setShowForm(true)}
         />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-          <table className="w-full text-left">
-            <thead className="border-b border-zinc-200 text-sm text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
+        <div className="overflow-x-auto rounded-2xl border border-zinc-900 bg-zinc-950">
+          <table className="w-full text-left text-lg">
+            <thead className="border-b border-zinc-900 text-sm uppercase tracking-[0.12em] text-zinc-500">
               <tr>
-                <th className="p-4">Nome</th>
+                <th className="p-4">Nome da Empresa</th>
                 <th className="p-4">Setor</th>
                 <th className="p-4">Status</th>
-                <th className="p-4 text-right">Acao</th>
+                <th className="p-4">Acoes</th>
               </tr>
             </thead>
             <tbody>
-              {(Array.isArray(companies) ? companies : []).map((company) => (
-                <tr key={getCompanyId(company) || company.name} className="border-b border-zinc-100 last:border-b-0 dark:border-zinc-800">
-                  <td className="p-4 font-semibold text-zinc-900 dark:text-zinc-100">{company.name || "-"}</td>
-                  <td className="p-4 text-zinc-700 dark:text-zinc-300">{company.sector || "-"}</td>
-                  <td className="p-4 text-zinc-700 dark:text-zinc-300">
-                    {getCompanyId(company) === selectedCompanyId ? "Ativa" : company.status || "Disponivel"}
-                  </td>
-                  <td className="p-4 text-right">
-                    <button
-                      type="button"
-                      onClick={() => selectCompany(getCompanyId(company))}
-                      className={`rounded-md px-3 py-1.5 text-xs font-bold transition ${
-                        getCompanyId(company) === selectedCompanyId
-                          ? "bg-lime-300 text-zinc-900"
-                          : "border border-zinc-300 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                      }`}
-                    >
-                      {getCompanyId(company) === selectedCompanyId ? "Selecionada" : "Selecionar"}
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {(Array.isArray(companies) ? companies : []).map((company) => {
+                const isSelected = getCompanyId(company) === selectedCompanyId;
+                return (
+                  <tr key={getCompanyId(company) || company.name} className="border-b border-zinc-900 last:border-b-0">
+                    <td className="p-4 font-semibold text-zinc-100">{company.name || "-"}</td>
+                    <td className="p-4 text-zinc-300">{company.sector || "Tecnologia"}</td>
+                    <td className="p-4">
+                      <span className={`rounded-full px-3 py-1 text-sm font-bold ${isSelected ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-300"}`}>
+                        {isSelected ? "Ativa" : "Pendente"}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <button
+                        type="button"
+                        onClick={() => selectCompany(getCompanyId(company))}
+                        className="text-lime-400 transition hover:text-lime-300"
+                      >
+                        Gerenciar
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -187,4 +190,3 @@ const Companies = () => {
 };
 
 export default Companies;
-
