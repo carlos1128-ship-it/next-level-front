@@ -130,12 +130,21 @@ export async function changePassword(payload: {
 }
 
 export async function chatWithAi(payload: {
-  companyId: string;
+  companyId?: string;
   message: string;
   detailLevel: DetailLevel;
 }) {
-  const { data } = await api.post<{ response?: string; message?: string } | string>("/chat", payload);
-  return data;
+  try {
+    const { data } = await api.post<{ response?: string; message?: string } | string>("/chat", payload);
+    return data;
+  } catch {
+    // Compatibility fallback for environments still exposing AI chat in /ai/chat.
+    const { data } = await api.post<{ response?: string; message?: string } | string>("/ai/chat", {
+      message: payload.message,
+      detailLevel: payload.detailLevel,
+    });
+    return data;
+  }
 }
 
 export async function getFinancialReport(companyId: string) {

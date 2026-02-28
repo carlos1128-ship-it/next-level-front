@@ -4,7 +4,9 @@ import { SendIcon, UserIcon } from "../components/icons";
 import { useAuth } from "../App";
 import { useToast } from "../components/Toast";
 import { EmptyState } from "../components/AsyncState";
-import { chatWithAi } from "../src/services/endpoints";
+import { chatWithAi, getCompanies } from "../src/services/endpoints";
+
+const CHAT_STORAGE_KEY = "chat_history_v1";
 
 const TypingIndicator = () => (
   <div className="flex items-center space-x-1 p-2">
@@ -24,20 +26,57 @@ const normalizeText = (value: string) =>
 const Chat = () => {
   const { username, detailLevel, selectedCompanyId } = useAuth();
   const { addToast } = useToast();
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: 1,
-      text: `Ola ${username || "usuario"}! Posso ajudar com a analise dos seus dados.`,
-      sender: "ai",
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const raw = localStorage.getItem(CHAT_STORAGE_KEY);
+    if (!raw) {
+      setMessages([
+        {
+          id: 1,
+          text: `Ola ${username || "usuario"}! Posso ajudar com a analise dos seus dados.`,
+          sender: "ai",
+        },
+      ]);
+      return;
+    }
+    try {
+      const parsed = JSON.parse(raw) as ChatMessage[];
+      if (Array.isArray(parsed) && parsed.length) {
+        setMessages(parsed);
+        return;
+      }
+    } catch {
+      // ignore parse error and re-seed intro message
+    }
+    setMessages([
+      {
+        id: 1,
+        text: `Ola ${username || "usuario"}! Posso ajudar com a analise dos seus dados.`,
+        sender: "ai",
+      },
+    ]);
+  }, [username]);
+
+  useEffect(() => {
+    if (!messages.length) return;
+    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages.slice(-50)));
+  }, [messages]);
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
+
+  const resolveCompanyId = async () => {
+    if (selectedCompanyId) return selectedCompanyId;
+    const companies = await getCompanies();
+    const first = Array.isArray(companies) ? companies[0] : null;
+    const firstId = first?.id || first?._id || null;
+    return firstId;
+  };
 
   const sendMessage = async () => {
     const userInput = input.trim();
@@ -48,10 +87,11 @@ const Chat = () => {
     setIsTyping(true);
 
     try {
-      if (!selectedCompanyId) {
-        throw new Error("Selecione uma empresa para conversar com a IA.");
+      const companyId = await resolveCompanyId();
+      if (!companyId) {
+        throw new Error("Crie ou selecione uma empresa para conversar com a IA.");
       }
-      const data = await chatWithAi({ companyId: selectedCompanyId, message: userInput, detailLevel });
+      const data = await chatWithAi({ companyId, message: userInput, detailLevel });
       const responseText =
         typeof data === "string" ? data : data.response || data.message || "Sem resposta.";
 
@@ -65,6 +105,14 @@ const Chat = () => {
       ]);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro ao consultar IA.";
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          text: "Nao consegui responder agora. Tente novamente em alguns segundos.",
+          sender: "ai",
+        },
+      ]);
       addToast(message, "error");
     } finally {
       setIsTyping(false);
@@ -78,7 +126,16 @@ const Chat = () => {
       <header className="flex items-center justify-between border-b border-zinc-200 p-4 dark:border-zinc-800">
         <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Chat IA</h1>
         <button
-          onClick={() => setMessages([])}
+          onClick={() => {
+            localStorage.removeItem(CHAT_STORAGE_KEY);
+            setMessages([
+              {
+                id: 1,
+                text: `Ola ${username || "usuario"}! Posso ajudar com a analise dos seus dados.`,
+                sender: "ai",
+              },
+            ]);
+          }}
           className="text-sm text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
           type="button"
         >

@@ -20,6 +20,28 @@ interface InsightCardProps {
   color: "green" | "blue" | "purple" | "red";
 }
 
+function inferCategory(content: string): string {
+  const text = content.toLowerCase();
+  if (text.includes("risco") || text.includes("ameaca")) return "Risco";
+  if (text.includes("oportunidade")) return "Oportunidade";
+  if (text.includes("recomend")) return "Recomendacao";
+  if (text.includes("padrao") || text.includes("tendencia")) return "Padrao";
+  return "Sugestao da IA";
+}
+
+function inferColor(category: string): InsightCardProps["color"] {
+  if (category === "Risco") return "red";
+  if (category === "Oportunidade") return "green";
+  if (category === "Recomendacao") return "purple";
+  return "blue";
+}
+
+function compactText(value: string): string {
+  const clean = value.replace(/\s+/g, " ").trim();
+  if (clean.length <= 420) return clean;
+  return `${clean.slice(0, 420)}...`;
+}
+
 const InsightCard: React.FC<InsightCardProps> = ({ title, description, category, color }) => {
   const colorClasses = {
     green: "border-green-500/40 bg-green-500/5",
@@ -36,12 +58,12 @@ const InsightCard: React.FC<InsightCardProps> = ({ title, description, category,
   };
 
   return (
-    <div className={`rounded-3xl border p-6 ${colorClasses[color]}`}>
+    <div className={`rounded-2xl border p-5 ${colorClasses[color]}`}>
       <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${textColors[color]}`}>
         {category}
       </span>
-      <h3 className="mt-2 text-xl font-black tracking-tight text-zinc-100 md:text-2xl">{title}</h3>
-      <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-zinc-300 md:text-base">{description}</p>
+      <h3 className="mt-2 text-lg font-black tracking-tight text-zinc-100 md:text-xl">{title}</h3>
+      <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-zinc-300">{description}</p>
     </div>
   );
 };
@@ -91,12 +113,16 @@ const Insights = () => {
       const { data } = await api.get("/ai/history");
       const parsed = Array.isArray(data)
         ? data
-            .map((item: any, index: number) => ({
-              title: item?.title ?? "Insight da IA",
-              description: item?.description ?? item?.content ?? "",
-              category: item?.category ?? "Sugestao da IA",
-              color: (["green", "blue", "purple", "red"][index % 4] as InsightCardProps["color"]),
-            }))
+            .map((item: any) => {
+              const rawDescription = item?.description ?? item?.content ?? "";
+              const category = item?.category || inferCategory(String(rawDescription));
+              return {
+                title: item?.title ?? "Insight da IA",
+                description: compactText(String(rawDescription)),
+                category,
+                color: inferColor(category),
+              };
+            })
             .filter((item: InsightCardProps) => item.description)
         : [];
 
@@ -121,8 +147,8 @@ const Insights = () => {
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-4xl font-black tracking-tighter text-zinc-100 md:text-5xl">Insights</h1>
-        <p className="mt-2 text-base text-zinc-400 md:text-lg">Analise orientada por dados e monitoramento competitivo.</p>
+        <h1 className="text-3xl font-black tracking-tighter text-zinc-100 md:text-4xl">Insights</h1>
+        <p className="mt-2 text-sm text-zinc-400 md:text-base">Analise orientada por dados e monitoramento competitivo.</p>
       </header>
 
       {loading ? <LoadingState label="Carregando insights..." /> : null}
