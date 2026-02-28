@@ -66,12 +66,11 @@ export const useAuth = () => {
 
 const AuthProvider = ({ children }: { children?: ReactNode }) => {
   const storedUser = readStoredUser();
+  const storedCompanyId = localStorage.getItem(COMPANY_ID_STORAGE_KEY);
   const [isLoggedIn, setIsLoggedIn] = useState(Boolean(localStorage.getItem('access_token')));
   const [username, setUsername] = useState<string | null>(storedUser.name);
   const [email, setEmail] = useState<string | null>(storedUser.email);
-  const [selectedCompanyId, setSelectedCompanyIdState] = useState<string | null>(
-    localStorage.getItem(COMPANY_ID_STORAGE_KEY)
-  );
+  const [selectedCompanyId, setSelectedCompanyIdState] = useState<string | null>(null);
   const { detailLevel, setDetailLevel } = useDetailLevel();
   const { theme, setTheme } = useTheme();
 
@@ -149,14 +148,23 @@ const AuthProvider = ({ children }: { children?: ReactNode }) => {
           return;
         }
 
-        const existing = list.find((company) => getCompanyId(company) === selectedCompanyId);
-        if (existing) return;
-        setSelectedCompanyId(getCompanyId(list[0]));
+        const current = selectedCompanyId
+          ? list.find((company) => getCompanyId(company) === selectedCompanyId)
+          : null;
+        const stored = storedCompanyId
+          ? list.find((company) => getCompanyId(company) === storedCompanyId)
+          : null;
+        const fallback = list[0];
+
+        const nextCompanyId = getCompanyId(current || stored || fallback);
+        if (nextCompanyId !== selectedCompanyId) {
+          setSelectedCompanyId(nextCompanyId);
+        }
       })
       .catch(() => {
         // ignore company bootstrap errors to avoid blocking app load
       });
-  }, [isLoggedIn]);
+  }, [isLoggedIn, selectedCompanyId, storedCompanyId]);
 
   const value = {
     isLoggedIn,

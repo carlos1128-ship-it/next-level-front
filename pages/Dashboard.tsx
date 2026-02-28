@@ -57,6 +57,16 @@ const normalizeAiText = (raw: string) => {
   return unique.join("\n");
 };
 
+const hasUsefulSummaryData = (summary: DashboardSummary) => {
+  if ((summary.revenue || 0) > 0) return true;
+  if ((summary.cac || 0) > 0) return true;
+  if ((summary.conversion || 0) > 0) return true;
+  if ((summary.retention || 0) > 0) return true;
+  if (Array.isArray(summary.lineData) && summary.lineData.length > 0) return true;
+  if (Array.isArray(summary.pieData) && summary.pieData.length > 0) return true;
+  return false;
+};
+
 const KpiCard: React.FC<
   KpiCardProps & { insight?: string; numericValue?: number; isMoney?: boolean }
 > = ({ title, value, change, changeType, icon: Icon, color, insight }) => {
@@ -137,7 +147,11 @@ const Dashboard = () => {
         pieData: Array.isArray(data?.pieData) ? data.pieData : [],
       };
       setSummary(normalized);
-      await runAnalyze(normalized);
+      if (hasUsefulSummaryData(normalized)) {
+        await runAnalyze(normalized);
+      } else {
+        setAiInsight("");
+      }
     } catch (error) {
       setSummary(EMPTY_SUMMARY);
       setAiInsight("");
