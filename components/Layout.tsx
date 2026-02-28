@@ -34,7 +34,7 @@ const Sidebar = () => {
   return (
     <aside className="fixed left-0 top-0 z-50 hidden h-full w-64 flex-col justify-between border-r border-zinc-900 bg-[#080b10] p-6 text-zinc-100 lg:flex">
       <div>
-        <div className="mb-8 text-[42px] font-black tracking-tight text-lime-400">NEXT LEVEL</div>
+        <div className="mb-8 text-5xl font-black tracking-tight text-lime-400">NEXT LEVEL</div>
         <p className="mb-6 text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">Operacao Segura</p>
         <nav aria-label="Menu Principal">
           <ul className="space-y-1">

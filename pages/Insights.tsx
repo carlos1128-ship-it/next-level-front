@@ -40,8 +40,8 @@ const InsightCard: React.FC<InsightCardProps> = ({ title, description, category,
       <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${textColors[color]}`}>
         {category}
       </span>
-      <h3 className="mt-2 text-3xl font-black tracking-tight text-zinc-100">{title}</h3>
-      <p className="mt-3 whitespace-pre-line text-base leading-relaxed text-zinc-300">{description}</p>
+      <h3 className="mt-2 text-xl font-black tracking-tight text-zinc-100 md:text-2xl">{title}</h3>
+      <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-zinc-300 md:text-base">{description}</p>
     </div>
   );
 };
@@ -121,8 +121,8 @@ const Insights = () => {
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-6xl font-black tracking-tighter text-zinc-100">Insights</h1>
-        <p className="mt-2 text-xl text-zinc-400">Analise orientada por dados e monitoramento competitivo.</p>
+        <h1 className="text-4xl font-black tracking-tighter text-zinc-100 md:text-5xl">Insights</h1>
+        <p className="mt-2 text-base text-zinc-400 md:text-lg">Analise orientada por dados e monitoramento competitivo.</p>
       </header>
 
       {loading ? <LoadingState label="Carregando insights..." /> : null}
@@ -135,7 +135,7 @@ const Insights = () => {
 
       <div className="rounded-3xl border border-zinc-900 bg-zinc-950 p-8">
         <div className="mb-8 flex items-center justify-between">
-          <h3 className="text-4xl font-black tracking-tighter text-zinc-100">Benchmark por Setor (30 dias)</h3>
+          <h3 className="text-2xl font-black tracking-tighter text-zinc-100 md:text-3xl">Benchmark por Setor (30 dias)</h3>
           <span className="rounded-xl bg-lime-400/15 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-lime-400">
             Analise Global
           </span>

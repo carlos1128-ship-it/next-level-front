@@ -95,7 +95,7 @@ const KpiCard: React.FC<
           <Icon className={`h-5 w-5 ${iconAccent || color}`} />
         </div>
       </div>
-      <p className="text-5xl font-black tracking-tighter text-zinc-100">{value}</p>
+      <p className="text-3xl font-black tracking-tighter text-zinc-100 md:text-4xl">{value}</p>
       <div
         className={`mt-2 flex items-center text-[11px] font-black ${
           changeType === "increase" ? "text-lime-400" : "text-red-500"
@@ -223,8 +223,8 @@ const Dashboard = () => {
     <div className="space-y-7 overflow-x-hidden">
       <header className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
         <div>
-          <h1 className="text-6xl font-black tracking-tighter text-zinc-100">Visao Geral</h1>
-          <p className="mt-2 text-2xl font-medium text-zinc-400">
+          <h1 className="text-4xl font-black tracking-tighter text-zinc-100 md:text-5xl">Visao Geral</h1>
+          <p className="mt-2 text-base font-medium text-zinc-400 md:text-lg">
             Ola, {username || "Usuario"}. Aqui esta o panorama estrategico de hoje.
           </p>
         </div>
@@ -306,7 +306,7 @@ const Dashboard = () => {
         <div className="grid min-h-0 grid-cols-1 gap-5 xl:grid-cols-3">
           <div className="relative min-h-0 overflow-hidden rounded-3xl border border-zinc-900 bg-zinc-950 p-7 xl:col-span-2">
             <div className="relative z-10 mb-8 flex items-center justify-between">
-              <h3 className="text-4xl font-black tracking-tighter text-zinc-100">Atividade por Hora</h3>
+              <h3 className="text-2xl font-black tracking-tighter text-zinc-100 md:text-3xl">Atividade por Hora</h3>
               <span className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500">
                 Monitoramento Ativo
               </span>
@@ -353,7 +353,7 @@ const Dashboard = () => {
           </div>
 
           <div className="flex flex-col items-center rounded-3xl border border-zinc-900 bg-zinc-950 p-7">
-            <h3 className="mb-8 text-4xl font-black tracking-tighter text-zinc-100">Mix de Produtos</h3>
+            <h3 className="mb-8 text-2xl font-black tracking-tighter text-zinc-100 md:text-3xl">Mix de Produtos</h3>
             <div className="w-full min-w-0">
               <ResponsiveContainer width="100%" minWidth={240} minHeight={220} height={260}>
                 <PieChart>
@@ -396,9 +396,9 @@ const Dashboard = () => {
             <div className="rounded-lg bg-lime-400/15 p-2 text-lime-400">
               <LightbulbIcon className="h-5 w-5" />
             </div>
-            <h3 className="text-4xl font-black tracking-tighter text-zinc-100">Insight Estrategico</h3>
+            <h3 className="text-2xl font-black tracking-tighter text-zinc-100 md:text-3xl">Insight Estrategico</h3>
           </div>
-          <p className="whitespace-pre-line text-lg leading-relaxed text-zinc-300">
+          <p className="whitespace-pre-line text-sm leading-relaxed text-zinc-300 md:text-base">
             {formattedInsight || "Seu volume de vendas aumentou nos canais digitais. Recomendamos otimizar a alocacao de verba em Meta Ads para os horarios de pico (20h-22h)."}
           </p>
         </div>

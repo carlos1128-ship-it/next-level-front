@@ -137,7 +137,7 @@ const FinancialFlow = () => {
 
   return (
     <div className="space-y-6 overflow-x-hidden">
-      <h1 className="text-4xl font-black tracking-tighter text-zinc-100 md:text-5xl">Fluxo Financeiro</h1>
+      <h1 className="text-3xl font-black tracking-tighter text-zinc-100 md:text-4xl">Fluxo Financeiro</h1>
 
       <div className="flex flex-wrap gap-3">
         <select className="rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2 text-zinc-100 focus:outline-none">
@@ -153,22 +153,22 @@ const FinancialFlow = () => {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
         <div className="rounded-2xl border border-zinc-900 bg-zinc-950 p-5">
           <p className="text-sm text-zinc-500">Faturamento Mensal</p>
-          <p className="mt-1 text-3xl font-black tracking-tight text-zinc-100 xl:text-4xl">{asCurrency(totalIncome)}</p>
+          <p className="mt-1 text-2xl font-black tracking-tight text-zinc-100 xl:text-3xl">{asCurrency(totalIncome)}</p>
           <p className="mt-2 text-sm font-bold text-lime-400">+12.5% vs. periodo anterior</p>
         </div>
         <div className="rounded-2xl border border-zinc-900 bg-zinc-950 p-5">
           <p className="text-sm text-zinc-500">Lucro Liquido</p>
-          <p className="mt-1 text-3xl font-black tracking-tight text-zinc-100 xl:text-4xl">{asCurrency(balance)}</p>
+          <p className="mt-1 text-2xl font-black tracking-tight text-zinc-100 xl:text-3xl">{asCurrency(balance)}</p>
           <p className="mt-2 text-sm font-bold text-lime-400">+8.3% vs. periodo anterior</p>
         </div>
         <div className="rounded-2xl border border-zinc-900 bg-zinc-950 p-5">
           <p className="text-sm text-zinc-500">Custos Operacionais</p>
-          <p className="mt-1 text-3xl font-black tracking-tight text-zinc-100 xl:text-4xl">{asCurrency(totalExpense)}</p>
+          <p className="mt-1 text-2xl font-black tracking-tight text-zinc-100 xl:text-3xl">{asCurrency(totalExpense)}</p>
           <p className="mt-2 text-sm font-bold text-red-500">-2.1% vs. periodo anterior</p>
         </div>
         <div className="rounded-2xl border border-zinc-900 bg-zinc-950 p-5">
           <p className="text-sm text-zinc-500">Margem de Lucro</p>
-          <p className="mt-1 text-3xl font-black tracking-tight text-zinc-100 xl:text-4xl">{margin.toFixed(1)}%</p>
+          <p className="mt-1 text-2xl font-black tracking-tight text-zinc-100 xl:text-3xl">{margin.toFixed(1)}%</p>
           <p className="mt-2 text-sm font-bold text-lime-400">+2.1% vs. periodo anterior</p>
         </div>
       </div>

@@ -93,11 +93,11 @@ const Companies = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-6xl font-black tracking-tighter text-zinc-100">Empresas</h1>
+        <h1 className="text-4xl font-black tracking-tighter text-zinc-100 md:text-5xl">Empresas</h1>
         <button
           type="button"
           onClick={() => setShowForm((v) => !v)}
-          className="flex items-center gap-2 rounded-2xl bg-lime-400 px-6 py-3 text-lg font-black text-zinc-900 transition hover:opacity-90"
+          className="flex items-center gap-2 rounded-2xl bg-lime-400 px-6 py-3 text-base font-black text-zinc-900 transition hover:opacity-90"
         >
           <PlusIcon className="h-5 w-5" /> Nova Empresa
         </button>
@@ -148,7 +148,7 @@ const Companies = () => {
         />
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-zinc-900 bg-zinc-950">
-          <table className="w-full text-left text-lg">
+          <table className="w-full text-left text-base">
             <thead className="border-b border-zinc-900 text-sm uppercase tracking-[0.12em] text-zinc-500">
               <tr>
                 <th className="p-4">Nome da Empresa</th>
