@@ -10,6 +10,13 @@ const baseURL = /\/api$/i.test(rawBaseUrl) ? rawBaseUrl : `${rawBaseUrl}/api`;
 
 let refreshPromise: Promise<string | null> | null = null;
 
+function getFirstString(values: unknown[]): string | null {
+  for (const value of values) {
+    if (typeof value === 'string' && value.trim()) return value;
+  }
+  return null;
+}
+
 function clearAuthStorage() {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
@@ -33,16 +40,32 @@ async function refreshAccessToken(): Promise<string | null> {
     const { data } = await refreshClient.post<{
       access_token?: string;
       accessToken?: string;
+      token?: string;
       refresh_token?: string;
       refreshToken?: string;
     }>('/auth/refresh', {
       refresh_token: refreshToken,
     });
 
-    const nextAccessToken = data.access_token || data.accessToken || null;
-    const nextRefreshToken = data.refresh_token || data.refreshToken || null;
+    const payload = data as Record<string, unknown>;
+    const nestedData = (payload.data || payload.result || payload.tokens || {}) as Record<string, unknown>;
+    const nextAccessToken = getFirstString([
+      payload.access_token,
+      payload.accessToken,
+      payload.token,
+      nestedData.access_token,
+      nestedData.accessToken,
+      nestedData.token,
+    ]);
+    const nextRefreshToken =
+      getFirstString([
+        payload.refresh_token,
+        payload.refreshToken,
+        nestedData.refresh_token,
+        nestedData.refreshToken,
+      ]) || refreshToken;
 
-    if (!nextAccessToken || !nextRefreshToken) {
+    if (!nextAccessToken) {
       clearAuthStorage();
       return null;
     }
