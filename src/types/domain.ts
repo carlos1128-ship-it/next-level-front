@@ -11,7 +11,7 @@ export interface DashboardSummary {
 
 export interface TransactionItem {
   id: string;
-  type: "revenue" | "expense";
+  type: "income" | "expense";
   description: string;
   amount: number;
   createdAt: string;

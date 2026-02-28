@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { useAuth } from "../App";
 import { useToast } from "../components/Toast";
 import { getErrorMessage } from "../src/services/api";
@@ -63,13 +63,13 @@ const Profile = () => {
     <div className="max-w-3xl mx-auto space-y-6">
       <h1 className="text-3xl font-bold">Perfil</h1>
 
-      <div className="bg-[#111111]/50 backdrop-blur-sm border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 space-y-4">
+      <div className="bg-white backdrop-blur-sm border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 space-y-4">
         <div>
           <label className="text-xs text-zinc-500 dark:text-zinc-400 uppercase">Nome</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full mt-1 bg-[#181818] border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2"
+            className="w-full mt-1 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2"
           />
         </div>
         <div>
@@ -77,7 +77,7 @@ const Profile = () => {
           <input
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full mt-1 bg-[#181818] border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2"
+            className="w-full mt-1 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2"
           />
         </div>
         <button
@@ -89,21 +89,21 @@ const Profile = () => {
         </button>
       </div>
 
-      <div className="bg-[#111111]/50 backdrop-blur-sm border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 space-y-4">
+      <div className="bg-white backdrop-blur-sm border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 space-y-4">
         <h2 className="text-lg font-bold">Trocar Senha</h2>
         <input
           type="password"
           value={currentPassword}
           onChange={(e) => setCurrentPassword(e.target.value)}
           placeholder="Senha atual"
-          className="w-full bg-[#181818] border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2"
+          className="w-full bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2"
         />
         <input
           type="password"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
           placeholder="Nova senha"
-          className="w-full bg-[#181818] border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2"
+          className="w-full bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2"
         />
         <button
           onClick={onChangePassword}
@@ -125,4 +125,5 @@ const Profile = () => {
 };
 
 export default Profile;
+
 

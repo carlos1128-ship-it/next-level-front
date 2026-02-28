@@ -3,15 +3,20 @@
 @tailwind utilities;
 
 :root {
-  --primary: #B6FF00;
-  --bg: #f4f4f5;
+  --primary: #84cc16;
+  --bg: #ffffff;
+  --bg-soft: #f8fafc;
+  --text: #111827;
+  --text-muted: #4b5563;
   --card: #ffffff;
+  --card-border: #e5e7eb;
+  --card-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
 }
 
 body {
   font-family: "Inter", sans-serif;
   background-color: var(--bg);
-  color: #18181b;
+  color: var(--text);
   overflow-x: hidden;
 }
 
@@ -109,9 +114,10 @@ body {
 }
 
 .glass {
-  background: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(24, 24, 27, 0.08);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--card-shadow);
 }
 
 .dark .glass {

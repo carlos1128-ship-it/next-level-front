@@ -32,13 +32,28 @@ interface AuthContextType {
   setSelectedCompanyId: (value: string | null) => void;
   setDetailLevel: (value: DetailLevel) => void;
   setTheme: (value: 'dark' | 'light') => void;
-  login: (name: string) => void;
+  login: (user: { name?: string | null; email?: string | null }) => void;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 const COMPANY_ID_STORAGE_KEY = "selectedCompanyId";
+const AUTH_USER_STORAGE_KEY = "auth_user";
 const getCompanyId = (company: Partial<Company> | null | undefined) => company?.id || company?._id || null;
+
+function readStoredUser() {
+  const raw = localStorage.getItem(AUTH_USER_STORAGE_KEY);
+  if (!raw) return { name: null as string | null, email: null as string | null };
+  try {
+    const parsed = JSON.parse(raw) as { name?: string | null; email?: string | null };
+    return {
+      name: parsed.name || null,
+      email: parsed.email || null,
+    };
+  } catch {
+    return { name: null as string | null, email: null as string | null };
+  }
+}
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -49,14 +64,22 @@ export const useAuth = () => {
 };
 
 const AuthProvider = ({ children }: { children?: ReactNode }) => {
+  const storedUser = readStoredUser();
   const [isLoggedIn, setIsLoggedIn] = useState(Boolean(localStorage.getItem('token')));
-  const [username, setUsername] = useState<string | null>(null);
-  const [email, setEmail] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(storedUser.name);
+  const [email, setEmail] = useState<string | null>(storedUser.email);
   const [selectedCompanyId, setSelectedCompanyIdState] = useState<string | null>(
     localStorage.getItem(COMPANY_ID_STORAGE_KEY)
   );
   const { detailLevel, setDetailLevel } = useDetailLevel();
   const { theme, setTheme } = useTheme();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      setIsLoggedIn(true);
+    }
+  }, []);
 
   const setSelectedCompanyId = (value: string | null) => {
     setSelectedCompanyIdState(value);
@@ -67,9 +90,14 @@ const AuthProvider = ({ children }: { children?: ReactNode }) => {
     localStorage.removeItem(COMPANY_ID_STORAGE_KEY);
   };
 
-  const login = (name: string) => {
+  const login = (user: { name?: string | null; email?: string | null }) => {
     setIsLoggedIn(true);
-    setUsername(name);
+    setUsername(user.name || null);
+    setEmail(user.email || null);
+    localStorage.setItem(
+      AUTH_USER_STORAGE_KEY,
+      JSON.stringify({ name: user.name || null, email: user.email || null })
+    );
   };
 
   const logout = () => {
@@ -78,6 +106,7 @@ const AuthProvider = ({ children }: { children?: ReactNode }) => {
     setEmail(null);
     setSelectedCompanyId(null);
     localStorage.removeItem('token');
+    localStorage.removeItem(AUTH_USER_STORAGE_KEY);
   };
 
   useEffect(() => {
@@ -88,6 +117,13 @@ const AuthProvider = ({ children }: { children?: ReactNode }) => {
         if (profile?.email) setEmail(profile.email);
         if (profile?.detailLevel) setDetailLevel(profile.detailLevel);
         if (profile?.theme) setTheme(profile.theme);
+        localStorage.setItem(
+          AUTH_USER_STORAGE_KEY,
+          JSON.stringify({
+            name: profile?.name || null,
+            email: profile?.email || null,
+          })
+        );
       })
       .catch(() => {
         // ignore profile bootstrap errors to avoid blocking app load
@@ -187,6 +223,7 @@ const AppContent = () => {
           <Route path="/companies" element={<ProtectedRoute><Layout><Companies /></Layout></ProtectedRoute>} />
           <Route path="/insights" element={<ProtectedRoute><Layout><Insights /></Layout></ProtectedRoute>} />
           <Route path="/financial-flow" element={<ProtectedRoute><Layout><FinancialFlow /></Layout></ProtectedRoute>} />
+          <Route path="/finance" element={<ProtectedRoute><Layout><FinancialFlow /></Layout></ProtectedRoute>} />
           <Route path="/plans" element={<ProtectedRoute><Layout><Plans /></Layout></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

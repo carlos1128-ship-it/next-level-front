@@ -49,7 +49,7 @@ const Reports = () => {
       if (!map.has(key)) map.set(key, { name: key, Receita: 0, Despesa: 0 });
       const row = map.get(key);
       if (!row) return;
-      if (tx.type === "revenue") row.Receita += Number(tx.amount || 0);
+      if (tx.type === "income") row.Receita += Number(tx.amount || 0);
       if (tx.type === "expense") row.Despesa += Number(tx.amount || 0);
     });
     return Array.from(map.values()).slice(-20);

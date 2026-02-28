@@ -1,3 +1,5 @@
+﻿import axios, { AxiosError, AxiosHeaders, type AxiosRequestConfig } from "axios";
+
 const env = import.meta.env as Record<string, string | undefined>;
 const COMPANY_ID_STORAGE_KEY = "selectedCompanyId";
 
@@ -6,11 +8,7 @@ function normalizeBaseUrl(url: string) {
   return /\/api$/i.test(trimmed) ? trimmed : `${trimmed}/api`;
 }
 
-const runtimeApiUrl =
-  env.NEXT_PUBLIC_API_URL ||
-  (typeof process !== "undefined" ? process.env?.NEXT_PUBLIC_API_URL : undefined) ||
-  env.VITE_API_URL ||
-  "";
+const runtimeApiUrl = env.VITE_API_URL || "";
 
 const configuredApiUrl = runtimeApiUrl.trim();
 
@@ -21,112 +19,112 @@ function normalizeEndpoint(endpoint: string) {
   return withSlash.replace(/^\/api(?=\/|$)/i, "") || "/";
 }
 
-function buildUrl(endpoint: string) {
-  if (!API_URL) {
-    throw new Error("NEXT_PUBLIC_API_URL nao configurada.");
-  }
-  return `${API_URL}${normalizeEndpoint(endpoint)}`;
-}
-
-function getSelectedCompanyId() {
-  return localStorage.getItem(COMPANY_ID_STORAGE_KEY);
-}
-
 function endpointAllowsMissingCompany(endpoint: string) {
   const normalized = normalizeEndpoint(endpoint);
   return (
     normalized.startsWith("/auth") ||
     normalized.startsWith("/companies") ||
+    normalized.startsWith("/company") ||
     normalized.startsWith("/profile")
   );
-}
-
-function appendCompanyIdToUrl(url: string, companyId: string) {
-  const parsedUrl = new URL(url);
-  parsedUrl.searchParams.set("companyId", companyId);
-  return parsedUrl.toString();
-}
-
-function mergeCompanyIdInBody(body: BodyInit | null | undefined, companyId: string) {
-  if (!body) return JSON.stringify({ companyId });
-  if (typeof body !== "string") return body;
-
-  try {
-    const parsed = JSON.parse(body);
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return body;
-    const merged = { ...(parsed as Record<string, unknown>), companyId };
-    return JSON.stringify(merged);
-  } catch {
-    return body;
-  }
-}
-
-function buildHeaders(options: RequestInit = {}) {
-  const token = localStorage.getItem("token");
-  const selectedCompanyId = getSelectedCompanyId();
-  return {
-    ...(options.body !== undefined ? { "Content-Type": "application/json" } : {}),
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...(selectedCompanyId ? { "X-Company-Id": selectedCompanyId } : {}),
-    ...options.headers,
-  } as HeadersInit;
-}
-
-function parseJsonFromText<T>(text: string) {
-  if (!text) return null as T;
-  return JSON.parse(text) as T;
 }
 
 function extractBackendMessage(payload: unknown) {
   if (!payload || typeof payload !== "object") return null;
   const candidate = payload as Record<string, unknown>;
   if (typeof candidate.message === "string") return candidate.message;
+  if (Array.isArray(candidate.message) && typeof candidate.message[0] === "string") {
+    return candidate.message[0];
+  }
   if (typeof candidate.error === "string") return candidate.error;
   if (typeof candidate.details === "string") return candidate.details;
   return null;
 }
 
-function isBusinessFailure(payload: unknown) {
-  if (!payload || typeof payload !== "object") return false;
-  const candidate = payload as Record<string, unknown>;
-  if (candidate.success === false) return true;
-  if (candidate.ok === false) return true;
-  if (typeof candidate.error === "string" && candidate.error.trim()) return true;
-  if (typeof candidate.status === "string" && candidate.status.toLowerCase() === "error") {
-    return true;
-  }
-  return false;
-}
+function buildApiError(error: AxiosError) {
+  const responseData = error.response?.data;
+  const responseStatus = error.response?.status;
 
-function logRequest(method: string, url: string, status?: number) {
-  if (typeof status === "number") {
-    console.info(`[API] ${method} ${url} -> ${status}`);
-    return;
-  }
-  console.info(`[API] ${method} ${url}`);
-}
-
-function parsePayloadSafely<T>(text: string) {
-  if (!text) return null as T;
-  const trimmed = text.trim();
-  if (!trimmed) return null as T;
-  if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) {
-    return trimmed as T;
-  }
-  try {
-    return parseJsonFromText<T>(text);
-  } catch {
-    throw new Error("Resposta invalida da API.");
-  }
-}
-
-function parseRequestError(status: number, payload: unknown) {
   const message =
-    extractBackendMessage(payload) ||
-    (typeof payload === "string" && payload.trim() ? payload : null) ||
-    `Erro na requisicao (${status}).`;
+    extractBackendMessage(responseData) ||
+    error.message ||
+    (responseStatus ? `Erro na requisicao (${responseStatus}).` : "Erro na requisicao.");
+
   return new Error(message);
 }
+
+function getSelectedCompanyId() {
+  return localStorage.getItem(COMPANY_ID_STORAGE_KEY);
+}
+
+if (!API_URL) {
+  // Keep app booting, but requests will fail with explicit message in interceptor.
+  console.warn("VITE_API_URL nao configurada.");
+}
+
+export const api = axios.create({
+  baseURL: API_URL || undefined,
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+api.interceptors.request.use((config) => {
+  if (!API_URL) {
+    throw new Error("VITE_API_URL nao configurada.");
+  }
+
+  const token = localStorage.getItem("token");
+  const selectedCompanyId = getSelectedCompanyId();
+  const endpoint = normalizeEndpoint(config.url || "/");
+
+  config.headers = new AxiosHeaders(config.headers);
+  if (token) {
+    config.headers.set("Authorization", `Bearer ${token}`);
+  }
+  if (selectedCompanyId) {
+    config.headers.set("X-Company-Id", selectedCompanyId);
+  }
+
+  if (!selectedCompanyId && !endpointAllowsMissingCompany(endpoint)) {
+    throw new Error("Selecione uma empresa primeiro");
+  }
+
+  if (selectedCompanyId && !endpointAllowsMissingCompany(endpoint)) {
+    const method = (config.method || "get").toLowerCase();
+    if (method === "get" || method === "head") {
+      config.params = {
+        ...(config.params || {}),
+        companyId: selectedCompanyId,
+      };
+    } else if (config.data && typeof config.data === "object" && !Array.isArray(config.data)) {
+      config.data = {
+        ...(config.data as Record<string, unknown>),
+        companyId: (config.data as Record<string, unknown>).companyId || selectedCompanyId,
+      };
+    } else if (!config.data) {
+      config.data = { companyId: selectedCompanyId };
+    }
+  }
+
+  return config;
+});
+
+api.interceptors.response.use(
+  (response) => response,
+  (error: AxiosError) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("selectedCompanyId");
+      localStorage.removeItem("auth_user");
+      if (!window.location.hash.includes("/login")) {
+        window.location.assign("/#/login");
+      }
+    }
+    throw buildApiError(error);
+  }
+);
 
 export function getErrorMessage(error: unknown, fallback = "Erro na requisicao.") {
   if (error instanceof Error && error.message) return error.message;
@@ -136,104 +134,20 @@ export function getErrorMessage(error: unknown, fallback = "Erro na requisicao."
 
 export async function apiRequest<T = unknown>(
   endpoint: string,
-  options: RequestInit = {}
-) {
-  const method = (options.method || "GET").toUpperCase();
-  const selectedCompanyId = getSelectedCompanyId();
-
-  if (!selectedCompanyId && !endpointAllowsMissingCompany(endpoint)) {
-    throw new Error("Selecione uma empresa primeiro");
-  }
-
-  let url = buildUrl(endpoint);
-  let requestOptions: RequestInit = { ...options };
-
-  if (selectedCompanyId) {
-    if (method === "GET" || method === "HEAD") {
-      url = appendCompanyIdToUrl(url, selectedCompanyId);
-    } else {
-      requestOptions = {
-        ...requestOptions,
-        body: mergeCompanyIdInBody(requestOptions.body, selectedCompanyId),
-      };
-    }
-  }
-
-  logRequest(method, url);
-
-  const response = await fetch(url, {
-    ...requestOptions,
-    credentials: "include",
-    headers: buildHeaders(requestOptions),
+  options: AxiosRequestConfig = {}
+): Promise<T> {
+  const response = await api.request<T>({
+    url: normalizeEndpoint(endpoint),
+    ...options,
   });
-  logRequest(method, url, response.status);
-
-  const text = await response.text();
-  const parsed = text ? parsePayloadSafely<unknown>(text) : null;
-
-  if (!response.ok) throw parseRequestError(response.status, parsed);
-  if (isBusinessFailure(parsed)) throw parseRequestError(response.status, parsed);
-
-  if (response.status === 204) return null as T;
-  return parsed as T;
+  return response.data;
 }
 
 export async function apiDownload(endpoint: string) {
-  const method = "GET";
-  const selectedCompanyId = getSelectedCompanyId();
-
-  if (!selectedCompanyId && !endpointAllowsMissingCompany(endpoint)) {
-    throw new Error("Selecione uma empresa primeiro");
-  }
-
-  const url = selectedCompanyId
-    ? appendCompanyIdToUrl(buildUrl(endpoint), selectedCompanyId)
-    : buildUrl(endpoint);
-  logRequest(method, url);
-
-  const response = await fetch(url, {
+  const response = await api.request<Blob>({
+    url: normalizeEndpoint(endpoint),
     method: "GET",
-    credentials: "include",
-    headers: buildHeaders(),
+    responseType: "blob",
   });
-  logRequest(method, url, response.status);
-
-  if (!response.ok) {
-    const text = await response.text();
-    const parsed = text ? parsePayloadSafely<unknown>(text) : null;
-    throw parseRequestError(response.status, parsed);
-  }
-
-  return response.blob();
+  return response.data;
 }
-
-export const api = {
-  async get<T = unknown>(endpoint: string, options: RequestInit = {}) {
-    const data = await apiRequest<T>(endpoint, { ...options, method: "GET" });
-    return { data };
-  },
-  async post<T = unknown>(
-    endpoint: string,
-    body?: unknown,
-    options: RequestInit = {}
-  ) {
-    const data = await apiRequest<T>(endpoint, {
-      ...options,
-      method: "POST",
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
-    return { data };
-  },
-  async patch<T = unknown>(
-    endpoint: string,
-    body?: unknown,
-    options: RequestInit = {}
-  ) {
-    const data = await apiRequest<T>(endpoint, {
-      ...options,
-      method: "PATCH",
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
-    return { data };
-  },
-};
