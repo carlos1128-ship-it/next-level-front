@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { PlusIcon } from "../components/icons";
 import { useToast } from "../components/Toast";
 import { EmptyState, ErrorState, LoadingState } from "../components/AsyncState";
-import { getErrorMessage } from "../src/services/api";
+import { getErrorMessage } from "../src/services/error";
 import { createCompany, getCompanies } from "../src/services/endpoints";
 import type { Company } from "../src/types/domain";
 import { useAuth } from "../App";
@@ -186,3 +186,4 @@ const Companies = () => {
 };
 
 export default Companies;
+

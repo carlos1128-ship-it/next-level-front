@@ -8,7 +8,8 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
-import { api, getErrorMessage } from "../services/api";
+import { api } from "../services/api";
+import { getErrorMessage } from "../src/services/error";
 import { useToast } from "../components/Toast";
 import { EmptyState, ErrorState, LoadingState } from "../components/AsyncState";
 
@@ -144,3 +145,4 @@ const Insights = () => {
 };
 
 export default Insights;
+

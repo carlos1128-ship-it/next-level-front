@@ -1,4 +1,4 @@
-﻿import { api, apiDownload } from "./api";
+import api from "./api";
 import type {
   Company,
   DashboardSummary,
@@ -11,19 +11,30 @@ function extractCompanyId(company: Partial<Company> | null | undefined) {
   return company?.id || company?._id || null;
 }
 
+function normalizeTransaction(transaction: any): TransactionItem {
+  const rawType = String(transaction?.type || "").toLowerCase();
+  return {
+    ...transaction,
+    type: rawType === "income" ? "income" : "expense",
+    amount: Number(transaction?.amount || 0),
+    createdAt: transaction?.createdAt || transaction?.occurredAt || new Date().toISOString(),
+  } as TransactionItem;
+}
+
 export async function getDashboardSummary() {
   const { data } = await api.get<Partial<DashboardSummary>>("/dashboard/summary");
   return data;
 }
 
 export async function getTransactions(companyId?: string) {
-  const { data } = await api.get<TransactionItem[]>("/financial/transactions", {
+  const { data } = await api.get<any[]>("/financial/transactions", {
     params: companyId ? { companyId } : undefined,
   });
-  return data;
+  return Array.isArray(data) ? data.map((item) => normalizeTransaction(item)) : [];
 }
 
 export async function createTransaction(payload: {
+  companyId: string;
   type: "income" | "expense";
   amount: number;
   description: string;
@@ -41,7 +52,10 @@ export async function createTransaction(payload: {
     amount: Number(payload.amount),
     date: new Date().toISOString(),
   });
-  return data;
+  return {
+    ...data,
+    transaction: normalizeTransaction(data.transaction),
+  };
 }
 
 export async function getCompanies() {
@@ -120,5 +134,8 @@ export async function chatWithAi(payload: {
 }
 
 export async function exportFinancialCsv() {
-  return apiDownload("/export/financial");
+  const { data } = await api.get<Blob>("/export/financial", {
+    responseType: "blob",
+  });
+  return data;
 }

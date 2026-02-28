@@ -9,7 +9,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useToast } from "../components/Toast";
-import { getErrorMessage } from "../src/services/api";
+import { getErrorMessage } from "../src/services/error";
 import { EmptyState, ErrorState, LoadingState } from "../components/AsyncState";
 import { exportFinancialCsv, getTransactions } from "../src/services/endpoints";
 import type { TransactionItem } from "../src/types/domain";
@@ -123,3 +123,4 @@ const Reports = () => {
 };
 
 export default Reports;
+

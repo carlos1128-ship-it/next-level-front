@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   LineChart,
   Line,
@@ -21,7 +21,7 @@ import {
   LightbulbIcon,
 } from "../components/icons";
 import { useToast } from "../components/Toast";
-import { getErrorMessage } from "../src/services/api";
+import { getErrorMessage } from "../src/services/error";
 import {
   analyzeData,
   exportFinancialCsv,
@@ -83,7 +83,7 @@ const KpiCard: React.FC<
         ) : (
           <ArrowDownRightIcon className="w-3.5 h-3.5 mr-1" />
         )}
-        {change} <span className="text-zinc-500 dark:text-zinc-400 ml-1 font-medium">vs. perÃ­odo anterior</span>
+        {change} <span className="text-zinc-500 dark:text-zinc-400 ml-1 font-medium">vs. período anterior</span>
       </div>
       {insight ? (
         <button
@@ -178,9 +178,9 @@ const Dashboard = () => {
     <div className="space-y-8 overflow-x-hidden">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div>
-          <h1 className="text-4xl font-black tracking-tighter">VisÃ£o Geral</h1>
+          <h1 className="text-4xl font-black tracking-tighter">Visão Geral</h1>
           <p className="text-zinc-500 dark:text-zinc-400 font-medium mt-1">
-            OlÃ¡, {username || "usuÃ¡rio"}. Aqui estÃ¡ seu panorama estratÃ©gico.
+            Olá, {username || "usuário"}. Aqui está seu panorama estratégico.
           </p>
         </div>
         <div className="flex gap-3 w-full md:w-auto">
@@ -212,7 +212,7 @@ const Dashboard = () => {
           color="text-[#B6FF00]"
         />
         <KpiCard
-          title="Taxa de ConversÃ£o"
+          title="Taxa de Conversão"
           value={asPercent(summary.conversion)}
           change="0%"
           changeType="increase"
@@ -220,7 +220,7 @@ const Dashboard = () => {
           color="text-blue-400"
         />
         <KpiCard
-          title="CAC MÃ©dio"
+          title="CAC Médio"
           value={asCurrency(summary.cac)}
           change="0%"
           changeType="decrease"
@@ -228,7 +228,7 @@ const Dashboard = () => {
           color="text-red-400"
         />
         <KpiCard
-          title="Taxa de RetenÃ§Ã£o"
+          title="Taxa de Retenção"
           value={asPercent(summary.retention)}
           change="0%"
           changeType="increase"
@@ -239,7 +239,7 @@ const Dashboard = () => {
 
       {!hasChartData ? (
         <div className="bg-white dark:bg-zinc-900 p-8 rounded-3xl border border-zinc-200 dark:border-zinc-800 text-center text-gray-400">
-          Nenhum dado disponÃ­vel ainda. Adicione transaÃ§Ãµes no fluxo financeiro para popular o
+          Nenhum dado disponível ainda. Adicione transações no fluxo financeiro para popular o
           dashboard.
         </div>
       ) : (
@@ -292,7 +292,7 @@ const Dashboard = () => {
                 </ResponsiveContainer>
               ) : (
                 <div className="h-[320px] grid place-items-center text-zinc-500 dark:text-zinc-400 text-sm">
-                  Sem histÃ³rico para o perÃ­odo.
+                  Sem histórico para o período.
                 </div>
               )}
             </div>
@@ -334,7 +334,7 @@ const Dashboard = () => {
                 </ResponsiveContainer>
               ) : (
                 <div className="h-[260px] grid place-items-center text-zinc-500 dark:text-zinc-400 text-sm">
-                  Sem distribuiÃ§Ã£o disponÃ­vel.
+                  Sem distribuição disponível.
                 </div>
               )}
             </div>
@@ -348,7 +348,7 @@ const Dashboard = () => {
             <div className="p-2 rounded-lg bg-[#B6FF00]/10 text-[#B6FF00]">
               <LightbulbIcon className="w-5 h-5" />
             </div>
-            <h3 className="text-2xl font-black tracking-tighter">Insight EstratÃ©gico</h3>
+            <h3 className="text-2xl font-black tracking-tighter">Insight Estratégico</h3>
           </div>
           <p className="text-zinc-600 dark:text-zinc-300 text-sm leading-relaxed whitespace-pre-line break-words">
             {displayedInsight || "Ainda sem insight gerado para os dados atuais."}
@@ -368,6 +368,7 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
 
 
 

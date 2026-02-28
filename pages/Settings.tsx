@@ -1,7 +1,7 @@
-﻿import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../App";
 import { useToast } from "../components/Toast";
-import { getErrorMessage } from "../src/services/api";
+import { getErrorMessage } from "../src/services/error";
 import { changePassword, getUserProfile, updateUserProfile } from "../src/services/endpoints";
 import type { DetailLevel } from "../src/types/domain";
 
@@ -183,3 +183,4 @@ const Settings = () => {
 };
 
 export default Settings;
+

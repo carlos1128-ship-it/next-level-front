@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   AreaChart,
   Area,
@@ -10,7 +10,7 @@ import {
 } from "recharts";
 import { useToast } from "../components/Toast";
 import { createTransaction, getTransactions } from "../src/services/endpoints";
-import { getErrorMessage } from "../src/services/api";
+import { getErrorMessage } from "../src/services/error";
 import { EmptyState, ErrorState, LoadingState } from "../components/AsyncState";
 import type { TransactionItem } from "../src/types/domain";
 import { useAuth } from "../App";
@@ -90,7 +90,11 @@ const FinancialFlow = () => {
     }
     try {
       setLoadingSubmit(true);
+      if (!selectedCompanyId) {
+        throw new Error("Selecione uma empresa para continuar.");
+      }
       await createTransaction({
+        companyId: selectedCompanyId,
         type,
         amount: parsedAmount,
         description: description.trim(),
@@ -176,8 +180,8 @@ const FinancialFlow = () => {
               onChange={(e) => setType(e.target.value as "income" | "expense")}
               className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-lime-300 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
             >
-              <option value="income">Receita</option>
-              <option value="expense">Despesa</option>
+              <option value="income">Entrada</option>
+              <option value="expense">Saida</option>
             </select>
             <input
               value={amount}
@@ -242,3 +246,4 @@ const FinancialFlow = () => {
 };
 
 export default FinancialFlow;
+

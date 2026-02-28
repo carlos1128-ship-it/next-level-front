@@ -65,7 +65,7 @@ export const useAuth = () => {
 
 const AuthProvider = ({ children }: { children?: ReactNode }) => {
   const storedUser = readStoredUser();
-  const [isLoggedIn, setIsLoggedIn] = useState(Boolean(localStorage.getItem('token')));
+  const [isLoggedIn, setIsLoggedIn] = useState(Boolean(localStorage.getItem('access_token')));
   const [username, setUsername] = useState<string | null>(storedUser.name);
   const [email, setEmail] = useState<string | null>(storedUser.email);
   const [selectedCompanyId, setSelectedCompanyIdState] = useState<string | null>(
@@ -75,7 +75,7 @@ const AuthProvider = ({ children }: { children?: ReactNode }) => {
   const { theme, setTheme } = useTheme();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('access_token');
     if (token) {
       setIsLoggedIn(true);
     }
@@ -105,7 +105,7 @@ const AuthProvider = ({ children }: { children?: ReactNode }) => {
     setUsername(null);
     setEmail(null);
     setSelectedCompanyId(null);
-    localStorage.removeItem('token');
+    localStorage.removeItem('access_token');
     localStorage.removeItem(AUTH_USER_STORAGE_KEY);
   };
 
@@ -167,7 +167,7 @@ const AuthProvider = ({ children }: { children?: ReactNode }) => {
 };
 
 const ProtectedRoute = ({ children }: { children?: ReactNode }) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('access_token');
   const { isLoggedIn } = useAuth();
   return isLoggedIn && token ? <>{children}</> : <Navigate to="/login" />;
 };
