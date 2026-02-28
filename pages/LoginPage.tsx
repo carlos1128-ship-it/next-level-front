@@ -1,234 +1,266 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../App';
-import { EyeIcon, EyeOffIcon } from '../components/icons';
-import { api, apiRequest } from '../services/api';
+﻿import React, { useEffect, useState } from "react";
+import { useAuth } from "../App";
+import { EyeIcon, EyeOffIcon } from "../components/icons";
+import { api } from "../services/api";
 
 const Splash = ({ onDone }: { onDone: () => void }) => {
   const brand = "NEXT LEVEL";
   const letters = brand.split("");
 
   useEffect(() => {
-    const totalDuration = 3500; 
-    const timer = setTimeout(() => onDone(), totalDuration);
+    const timer = setTimeout(() => onDone(), 2000);
     return () => clearTimeout(timer);
   }, [onDone]);
 
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     return (
-      <div className="absolute inset-0 bg-white dark:bg-zinc-950 flex items-center justify-center z-50" aria-label="NEXT LEVEL">
-        <h1 className="text-6xl font-black text-[#B6FF00] text-neon tracking-tighter">NEXT LEVEL</h1>
+      <div className="absolute inset-0 z-50 flex items-center justify-center bg-white dark:bg-zinc-950" aria-label="NEXT LEVEL">
+        <h1 className="text-6xl font-black tracking-tighter text-lime-500">NEXT LEVEL</h1>
       </div>
     );
   }
 
   return (
-    <div className="absolute inset-0 bg-white dark:bg-zinc-950 flex flex-col items-center justify-center z-50" aria-label="NEXT LEVEL Animation">
+    <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white dark:bg-zinc-950" aria-label="NEXT LEVEL Animation">
       <div className="relative flex flex-col items-center">
         <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
           <div className="flex">
-            {letters.slice(0, 4).map((l, i) => {
-              let delay = 0;
-              if (i > 0) delay = 300 + 120 + (i - 1) * 120;
-              return (
-                <span 
-                  key={`l-${i}`} 
-                  className="splash-letter text-6xl md:text-8xl font-black text-[#B6FF00] text-neon tracking-tighter" 
-                  style={{ animationDelay: `${delay}ms` }}
-                >
-                  {l}
-                </span>
-              );
-            })}
+            {letters.slice(0, 4).map((l, i) => (
+              <span
+                key={`l-${i}`}
+                className="splash-letter text-6xl font-black tracking-tighter text-lime-500 md:text-8xl"
+                style={{ animationDelay: `${i * 100}ms` }}
+              >
+                {l}
+              </span>
+            ))}
           </div>
           <div className="flex">
-            {letters.slice(5).map((l, i) => {
-              const delay = 960 + i * 120;
-              return (
-                <span 
-                  key={`ll-${i}`} 
-                  className="splash-letter text-6xl md:text-8xl font-black text-[#B6FF00] text-neon tracking-tighter" 
-                  style={{ animationDelay: `${delay}ms` }}
-                >
-                  {l}
-                </span>
-              );
-            })}
+            {letters.slice(5).map((l, i) => (
+              <span
+                key={`ll-${i}`}
+                className="splash-letter text-6xl font-black tracking-tighter text-lime-500 md:text-8xl"
+                style={{ animationDelay: `${500 + i * 100}ms` }}
+              >
+                {l}
+              </span>
+            ))}
           </div>
         </div>
-        <p className="text-zinc-500 mt-10 tracking-[1em] text-[10px] font-black uppercase fade-in" style={{ animationDelay: '2s' }}>
-          Pronto para avançar
+        <p className="fade-in mt-10 text-[10px] font-black uppercase tracking-[1em] text-zinc-500" style={{ animationDelay: "1.2s" }}>
+          Pronto para avancar
         </p>
       </div>
     </div>
   );
 };
 
-const AuthForm = ({ title, subtitle, onSubmit, children, buttonText, loading, footerContent }: {
-    title: string;
-    subtitle: string;
-    onSubmit: (e: React.FormEvent) => void;
-    children?: React.ReactNode;
-    buttonText: string;
-    loading: boolean;
-    footerContent: React.ReactNode;
+const AuthForm = ({
+  title,
+  subtitle,
+  onSubmit,
+  children,
+  buttonText,
+  loading,
+  footerContent,
+}: {
+  title: string;
+  subtitle: string;
+  onSubmit: (e: React.FormEvent) => void;
+  children?: React.ReactNode;
+  buttonText: string;
+  loading: boolean;
+  footerContent: React.ReactNode;
 }) => (
-    <div className="w-full max-w-sm fade-in">
-        <div className="text-center mb-10">
-            <h1 className="text-4xl font-black text-[#B6FF00] text-neon tracking-tighter">{title}</h1>
-            <p className="text-zinc-500 dark:text-zinc-400 mt-2 text-sm font-medium">{subtitle}</p>
-        </div>
-        <form onSubmit={onSubmit} className="bg-[#121212] p-8 rounded-2xl border border-white/5 shadow-2xl">
-            {children}
-            <div className="flex flex-col items-center">
-                <button className="w-full bg-[#B6FF00] text-black font-bold py-4 px-4 rounded-xl hover:opacity-90 transition-all flex items-center justify-center neon-glow" type="submit" disabled={loading}>
-                    {loading ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-black"></div> : buttonText}
-                </button>
-                {footerContent}
-            </div>
-        </form>
-        <p className="text-center text-gray-700 text-[10px] uppercase font-bold tracking-widest mt-10">Inteligência Estratégica & Automação</p>
+  <div className="fade-in w-full max-w-sm">
+    <div className="mb-10 text-center">
+      <h1 className="text-4xl font-black tracking-tighter text-lime-500">{title}</h1>
+      <p className="mt-2 text-sm font-medium text-zinc-600 dark:text-zinc-400">{subtitle}</p>
     </div>
+    <form onSubmit={onSubmit} className="rounded-2xl border border-zinc-200 bg-white p-8 shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
+      {children}
+      <div className="flex flex-col items-center">
+        <button
+          className="flex w-full items-center justify-center rounded-xl bg-lime-400 px-4 py-4 font-bold text-zinc-900 transition-all hover:opacity-90"
+          type="submit"
+          disabled={loading}
+        >
+          {loading ? <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-zinc-900"></div> : buttonText}
+        </button>
+        {footerContent}
+      </div>
+    </form>
+    <p className="mt-10 text-center text-[10px] font-bold uppercase tracking-widest text-zinc-600 dark:text-zinc-400">
+      Inteligencia Estrategica e Automacao
+    </p>
+  </div>
 );
+
+const fieldClassName =
+  "w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900 focus:outline-none focus:border-lime-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100";
 
 const LoginPage = () => {
   const [step, setStep] = useState(0);
   const [isRegisterView, setIsRegisterView] = useState(false);
-  
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  
+
   const { login } = useAuth();
-  
+
   const resetForm = () => {
-    setName('');
-    setEmail('');
-    setPassword('');
-    setError('');
+    setName("");
+    setEmail("");
+    setPassword("");
+    setError("");
     setLoading(false);
-  }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     if (!email.trim() || !password.trim()) {
-      setError('Por favor, preencha todos os campos.');
+      setError("Preencha e-mail e senha.");
       return;
     }
 
     try {
       setLoading(true);
-      const { data } = await api.post<{ accessToken: string; user?: { name?: string } }>(
-        '/auth/login',
-        { email, password }
-      );
-      localStorage.setItem('token', data.accessToken);
-      login(data.user?.name || email);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao fazer login');
+      const { data } = await api.post<{ accessToken: string; user?: { name?: string } }>("/auth/login", {
+        email,
+        password,
+      });
+      localStorage.setItem("token", data.accessToken);
+      login({ name: data.user?.name || email, email });
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erro ao fazer login");
     } finally {
       setLoading(false);
     }
   };
-  
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     if (!name.trim() || !email.trim() || !password.trim()) {
-      setError('Preencha todos os campos.');
+      setError("Preencha todos os campos.");
       return;
     }
 
     try {
       setLoading(true);
-      await apiRequest('/auth/register', {
-        method: 'POST',
-        body: JSON.stringify({
-          email,
-          password,
-          companyName: name,
-        }),
+      await api.post("/auth/register", {
+        email,
+        password,
+        name: name.trim(),
+        companyName: name.trim(),
       });
-      alert('Conta criada com sucesso! Faça login.');
+      alert("Conta criada com sucesso. Faca login.");
       setIsRegisterView(false);
       resetForm();
-    } catch (err: any) {
-      setError(err.message || 'Erro ao registrar');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erro ao registrar");
     } finally {
       setLoading(false);
     }
   };
 
-  const renderContent = () => {
-    if (step === 0) return <Splash onDone={() => setStep(1)} />;
-    
-    return isRegisterView ? (
-        <AuthForm
-            title="NEXT LEVEL"
-            subtitle="Crie sua conta estratégica"
-            onSubmit={handleRegister}
-            buttonText="→ Começar agora"
-            loading={loading}
-            footerContent={
-                <button type="button" onClick={() => { setIsRegisterView(false); resetForm(); }} className="inline-block align-baseline font-bold text-sm text-gray-500 hover:text-zinc-900 dark:hover:text-zinc-100 mt-6 transition-colors">
-                    Já tem uma conta? <span className="text-[#B6FF00]">Entrar</span>
-                </button>
-            }
-        >
-            <div className="mb-4">
-                <label className="block text-gray-500 text-[10px] uppercase font-black tracking-widest mb-1.5">Nome</label>
-                <input value={name} onChange={e => setName(e.target.value)} className="w-full bg-[#181818] border border-white/5 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-[#B6FF00]" type="text" placeholder="Seu nome completo" />
-            </div>
-            <div className="mb-4">
-                <label className="block text-gray-500 text-[10px] uppercase font-black tracking-widest mb-1.5">E-mail</label>
-                <input value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-[#181818] border border-white/5 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-[#B6FF00]" type="email" placeholder="seu@email.com" />
-            </div>
-            <div className="mb-8">
-                <label className="block text-gray-500 text-[10px] uppercase font-black tracking-widest mb-1.5">Senha</label>
-                <input value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-[#181818] border border-white/5 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-[#B6FF00]" type="password" placeholder="••••••••••" />
-            </div>
-            {error && <p className="text-red-500 text-xs text-center mb-6 font-bold uppercase">{error}</p>}
-        </AuthForm>
-    ) : (
-         <AuthForm
-            title="NEXT LEVEL"
-            subtitle="Bem-vindo de volta ao comando"
-            onSubmit={handleLogin}
-            buttonText="→ Entrar no sistema"
-            loading={loading}
-            footerContent={
-                 <button type="button" onClick={() => { setIsRegisterView(true); resetForm(); }} className="inline-block align-baseline font-bold text-sm text-gray-500 hover:text-zinc-900 dark:hover:text-zinc-100 mt-6 transition-colors">
-                    Não tem uma conta? <span className="text-[#B6FF00]">Criar conta</span>
-                </button>
-            }
-        >
-            <div className="mb-4">
-                <label className="block text-gray-500 text-[10px] uppercase font-black tracking-widest mb-1.5">E-mail</label>
-                <input value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-[#181818] border border-white/5 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-[#B6FF00]" type="email" placeholder="seu@email.com" />
-            </div>
-            <div className="mb-8 relative">
-                <label className="block text-gray-500 text-[10px] uppercase font-black tracking-widest mb-1.5">Senha</label>
-                <input value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-[#181818] border border-white/5 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-[#B6FF00]" type={showPassword ? "text" : "password"} placeholder="••••••••••" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 top-7 pr-4 flex items-center text-gray-500">
-                    {showPassword ? <EyeOffIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
-                </button>
-            </div>
-            {error && <p className="text-red-500 text-xs text-center mb-6 font-bold uppercase">{error}</p>}
-        </AuthForm>
-    )
-  };
+  if (step === 0) {
+    return (
+      <div className="relative flex min-h-screen items-center justify-center bg-zinc-50 p-4 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+        <Splash onDone={() => setStep(1)} />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 flex items-center justify-center p-4">
-      {renderContent()}
+    <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-4 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+      {isRegisterView ? (
+        <AuthForm
+          title="NEXT LEVEL"
+          subtitle="Crie sua conta estrategica"
+          onSubmit={handleRegister}
+          buttonText="Entrar no sistema"
+          loading={loading}
+          footerContent={
+            <button
+              type="button"
+              onClick={() => {
+                setIsRegisterView(false);
+                resetForm();
+              }}
+              className="mt-6 inline-block align-baseline text-sm font-bold text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
+            >
+              Ja tem uma conta? <span className="text-lime-500">Entrar</span>
+            </button>
+          }
+        >
+          <div className="mb-4">
+            <label className="mb-1.5 block text-[10px] font-black uppercase tracking-widest text-zinc-500">Nome</label>
+            <input value={name} onChange={(e) => setName(e.target.value)} className={fieldClassName} type="text" placeholder="Seu nome completo" />
+          </div>
+          <div className="mb-4">
+            <label className="mb-1.5 block text-[10px] font-black uppercase tracking-widest text-zinc-500">E-mail</label>
+            <input value={email} onChange={(e) => setEmail(e.target.value)} className={fieldClassName} type="email" placeholder="seu@email.com" />
+          </div>
+          <div className="mb-8">
+            <label className="mb-1.5 block text-[10px] font-black uppercase tracking-widest text-zinc-500">Senha</label>
+            <input value={password} onChange={(e) => setPassword(e.target.value)} className={fieldClassName} type="password" placeholder="**********" />
+          </div>
+          {error && <p className="mb-6 text-center text-xs font-bold uppercase text-red-500">{error}</p>}
+        </AuthForm>
+      ) : (
+        <AuthForm
+          title="NEXT LEVEL"
+          subtitle="Bem-vindo de volta"
+          onSubmit={handleLogin}
+          buttonText="Entrar no sistema"
+          loading={loading}
+          footerContent={
+            <button
+              type="button"
+              onClick={() => {
+                setIsRegisterView(true);
+                resetForm();
+              }}
+              className="mt-6 inline-block align-baseline text-sm font-bold text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
+            >
+              Nao tem uma conta? <span className="text-lime-500">Criar conta</span>
+            </button>
+          }
+        >
+          <div className="mb-4">
+            <label className="mb-1.5 block text-[10px] font-black uppercase tracking-widest text-zinc-500">E-mail</label>
+            <input value={email} onChange={(e) => setEmail(e.target.value)} className={fieldClassName} type="email" placeholder="seu@email.com" />
+          </div>
+          <div className="relative mb-8">
+            <label className="mb-1.5 block text-[10px] font-black uppercase tracking-widest text-zinc-500">Senha</label>
+            <input
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={fieldClassName}
+              type={showPassword ? "text" : "password"}
+              placeholder="**********"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-0 top-7 flex items-center pr-4 text-zinc-500"
+            >
+              {showPassword ? <EyeOffIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+            </button>
+          </div>
+          {error && <p className="mb-6 text-center text-xs font-bold uppercase text-red-500">{error}</p>}
+        </AuthForm>
+      )}
     </div>
   );
 };
 
 export default LoginPage;
-
