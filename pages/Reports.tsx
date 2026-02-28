@@ -2,11 +2,16 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   LineChart,
   Line,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Legend,
 } from "recharts";
 import { useToast } from "../components/Toast";
 import { getErrorMessage } from "../src/services/error";
@@ -32,6 +37,8 @@ const formatCompactCurrency = (value: number) =>
 const Reports = () => {
   const { selectedCompanyId } = useAuth();
   const { addToast } = useToast();
+  const [period, setPeriod] = useState("30d");
+  const [sector, setSector] = useState("geral");
   const [transactions, setTransactions] = useState<TransactionItem[]>([]);
   const [totals, setTotals] = useState({ income: 0, expense: 0, balance: 0 });
   const [loading, setLoading] = useState(true);
@@ -85,6 +92,72 @@ const Reports = () => {
     return Array.from(map.values()).slice(-20);
   }, [safeTransactions]);
 
+  const monthlyData = useMemo(() => {
+    if (chartData.length === 0) return [];
+
+    const monthMap = new Map<string, { month: string; Lucro: number; Perda: number }>();
+
+    chartData.forEach((row) => {
+      const [day, month, year] = row.name.split("/");
+      const parsed = new Date(Number(year), Number(month) - 1, Number(day));
+      if (Number.isNaN(parsed.getTime())) return;
+
+      const key = parsed.toLocaleDateString("pt-BR", { month: "short" });
+      const normalizedKey = key.charAt(0).toUpperCase() + key.slice(1).replace(".", "");
+
+      if (!monthMap.has(normalizedKey)) monthMap.set(normalizedKey, { month: normalizedKey, Lucro: 0, Perda: 0 });
+      const current = monthMap.get(normalizedKey);
+      if (!current) return;
+      current.Lucro += row.Receita;
+      current.Perda += row.Despesa;
+    });
+
+    const values = Array.from(monthMap.values());
+    return values.length > 0 ? values.slice(-6) : [];
+  }, [chartData]);
+
+  const lineData = useMemo(() => {
+    if (monthlyData.length > 0) return monthlyData;
+
+    return [
+      { month: "Jan", Lucro: 4000, Perda: 2500 },
+      { month: "Fev", Lucro: 3000, Perda: 1500 },
+      { month: "Mar", Lucro: 2000, Perda: 10000 },
+      { month: "Abr", Lucro: 2800, Perda: 4000 },
+      { month: "Mai", Lucro: 1900, Perda: 4800 },
+      { month: "Jun", Lucro: 2400, Perda: 3800 },
+    ];
+  }, [monthlyData]);
+
+  const projectionData = useMemo(() => {
+    const base = Math.max(totals.balance || 0, totals.income - totals.expense, 5000);
+    return [
+      { year: "2024", total: base },
+      { year: "2025", total: Math.round(base * 1.2) },
+      { year: "2026", total: Math.round(base * 1.45) },
+      { year: "2027", total: Math.round(base * 1.8) },
+    ];
+  }, [totals]);
+
+  const comparisonData = useMemo(() => {
+    const totalFlow = Math.max(totals.income + totals.expense, 1);
+    const efficiency = Math.round((totals.income / totalFlow) * 100) || 85;
+    const waste = Math.round((totals.expense / totalFlow) * 100) || 15;
+
+    return [
+      {
+        name: "Empresa A",
+        Eficiencia: Math.max(35, Math.min(95, efficiency)),
+        Desperdicio: Math.max(5, Math.min(65, waste)),
+      },
+      {
+        name: "Empresa B",
+        Eficiencia: Math.max(30, Math.min(90, efficiency - 15)),
+        Desperdicio: Math.max(10, Math.min(70, waste + 15)),
+      },
+    ];
+  }, [totals]);
+
   const maxValue = useMemo(() => {
     const values = chartData.flatMap((row) => [row.Receita, row.Despesa]);
     return values.length ? Math.max(...values) : 0;
@@ -106,60 +179,56 @@ const Reports = () => {
   };
 
   return (
-    <div className="space-y-7">
-      <section className="rounded-3xl border border-zinc-900 bg-gradient-to-br from-zinc-950 via-zinc-950 to-zinc-900/90 p-6 md:p-8">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="mb-3 inline-flex items-center rounded-full border border-lime-400/30 bg-lime-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-lime-300">
-              Visao Financeira
-            </p>
-            <h1 className="text-3xl font-black tracking-tighter text-zinc-100 md:text-4xl">Relatorios</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-400 md:text-base">
-              Performance consolidada de receitas e despesas com leitura rapida para tomada de decisao.
-            </p>
-          </div>
+    <div className="space-y-6">
+      <header>
+        <h1 className="text-3xl font-black tracking-tight text-zinc-100 md:text-5xl">Relatorios</h1>
+      </header>
 
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={load}
-              type="button"
-              className="rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2.5 text-sm font-bold text-zinc-100 transition hover:border-zinc-500 hover:bg-zinc-800"
-            >
-              Atualizar
-            </button>
-            <button
-              onClick={handleExport}
-              type="button"
-              className="rounded-xl border border-lime-300/70 bg-lime-300 px-4 py-2.5 text-sm font-black text-zinc-900 transition hover:brightness-95"
-            >
-              Exportar CSV
-            </button>
-          </div>
-        </div>
+      <section className="flex flex-wrap gap-3">
+        <select
+          value={period}
+          onChange={(event) => setPeriod(event.target.value)}
+          className="rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-zinc-200 outline-none transition hover:border-zinc-600"
+        >
+          <option value="30d">Filtrar por data</option>
+          <option value="90d">Ultimos 90 dias</option>
+          <option value="12m">Ultimos 12 meses</option>
+        </select>
+
+        <select
+          value={sector}
+          onChange={(event) => setSector(event.target.value)}
+          className="rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-zinc-200 outline-none transition hover:border-zinc-600"
+        >
+          <option value="geral">Filtrar por setor</option>
+          <option value="ecommerce">E-commerce</option>
+          <option value="servicos">Servicos</option>
+          <option value="industria">Industria</option>
+        </select>
+
+        <button
+          type="button"
+          className="rounded-lg border border-lime-300/70 bg-lime-300 px-5 py-2.5 text-sm font-black text-zinc-900 transition hover:brightness-95"
+        >
+          Gerar relatorio detalhado
+        </button>
+
+        <button
+          onClick={load}
+          type="button"
+          className="rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2.5 text-sm font-bold text-zinc-100 transition hover:border-zinc-500 hover:bg-zinc-800"
+        >
+          Atualizar
+        </button>
+
+        <button
+          onClick={handleExport}
+          type="button"
+          className="rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2.5 text-sm font-bold text-zinc-100 transition hover:border-zinc-500 hover:bg-zinc-800"
+        >
+          Exportar PDF
+        </button>
       </section>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <article className="group relative overflow-hidden rounded-2xl border border-lime-400/20 bg-zinc-950 p-5">
-          <div className="pointer-events-none absolute -right-7 -top-7 h-20 w-20 rounded-full bg-lime-400/20 blur-2xl transition group-hover:scale-110" />
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-500">Receita</p>
-          <p className="mt-2 text-2xl font-black tracking-tight text-lime-400 md:text-3xl">{asCurrency(totals.income)}</p>
-          <p className="mt-2 text-xs text-zinc-500">Volume: {formatCompactCurrency(totals.income)}</p>
-        </article>
-
-        <article className="group relative overflow-hidden rounded-2xl border border-red-500/25 bg-zinc-950 p-5">
-          <div className="pointer-events-none absolute -right-7 -top-7 h-20 w-20 rounded-full bg-red-500/20 blur-2xl transition group-hover:scale-110" />
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-500">Despesa</p>
-          <p className="mt-2 text-2xl font-black tracking-tight text-red-400 md:text-3xl">{asCurrency(totals.expense)}</p>
-          <p className="mt-2 text-xs text-zinc-500">Volume: {formatCompactCurrency(totals.expense)}</p>
-        </article>
-
-        <article className="group relative overflow-hidden rounded-2xl border border-zinc-700 bg-zinc-950 p-5">
-          <div className="pointer-events-none absolute -right-7 -top-7 h-20 w-20 rounded-full bg-zinc-500/20 blur-2xl transition group-hover:scale-110" />
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-500">Saldo</p>
-          <p className="mt-2 text-2xl font-black tracking-tight text-zinc-100 md:text-3xl">{asCurrency(totals.balance)}</p>
-          <p className="mt-2 text-xs text-zinc-500">Movimentacoes: {safeTransactions.length}</p>
-        </article>
-      </div>
 
       {loading ? (
         <LoadingState label="Carregando relatorio..." />
@@ -176,69 +245,126 @@ const Reports = () => {
           description="Cadastre transacoes para gerar visualizacoes e exportacoes."
         />
       ) : (
-        <div className="rounded-3xl border border-zinc-900 bg-zinc-950 p-6 md:p-8">
-          <div className="mb-7 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h2 className="text-2xl font-black tracking-tight text-zinc-100 md:text-3xl">Evolucao Financeira</h2>
-              <p className="mt-2 text-sm text-zinc-500">Comparativo diario entre entrada e saida de caixa.</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-lime-500/35 bg-lime-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-lime-300">
-                Receita
-              </span>
-              <span className="rounded-full border border-red-500/35 bg-red-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-red-300">
-                Despesa
-              </span>
-            </div>
-          </div>
+        <>
+          <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+            <article className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 md:p-5">
+              <h2 className="mb-2 text-2xl font-black tracking-tight text-zinc-100">Lucros e Perdas</h2>
+              <div className="h-[340px] w-full min-w-0">
+                <ResponsiveContainer width="100%" height="100%" minWidth={260} minHeight={260}>
+                  <LineChart data={lineData} margin={{ top: 20, right: 16, left: 0, bottom: 6 }}>
+                    <CartesianGrid strokeDasharray="4 4" stroke="#243046" />
+                    <XAxis dataKey="month" stroke="#a1a1aa" tick={{ fill: "#a1a1aa", fontSize: 12 }} />
+                    <YAxis stroke="#a1a1aa" tick={{ fill: "#a1a1aa", fontSize: 12 }} />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: 10,
+                        border: "1px solid #3f3f46",
+                        background: "#09090b",
+                        color: "#f4f4f5",
+                      }}
+                      formatter={(value: number, name: string) => [asCurrency(Number(value || 0)), name]}
+                    />
+                    <Legend
+                      wrapperStyle={{ color: "#d4d4d8", fontSize: "11px", fontWeight: 700 }}
+                      formatter={(value) => (
+                        <span className={value === "Lucro" ? "text-lime-300" : "text-red-300"}>{value}</span>
+                      )}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="Lucro"
+                      stroke="#B6FF00"
+                      strokeWidth={2}
+                      dot={{ r: 3, fill: "#D8FF66", strokeWidth: 0 }}
+                      activeDot={{ r: 5, fill: "#E9FFC4", stroke: "#171717", strokeWidth: 2 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="Perda"
+                      stroke="#f87171"
+                      strokeWidth={2}
+                      dot={{ r: 3, fill: "#fca5a5", strokeWidth: 0 }}
+                      activeDot={{ r: 5, fill: "#fecaca", stroke: "#171717", strokeWidth: 2 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </article>
 
-          <div className="h-[360px] w-full min-w-0 rounded-2xl border border-zinc-900 bg-zinc-950/70 p-3">
-            <ResponsiveContainer width="100%" height="100%" minWidth={260} minHeight={260}>
-              <LineChart data={chartData} margin={{ top: 12, right: 12, left: 6, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="4 4" stroke="#2a2a32" />
-                <XAxis dataKey="name" tick={{ fill: "#a1a1aa", fontSize: 11 }} stroke="#3f3f46" />
-                <YAxis
-                  tick={{ fill: "#a1a1aa", fontSize: 11 }}
-                  stroke="#3f3f46"
-                  width={80}
-                  tickFormatter={(value) => formatCompactCurrency(Number(value || 0))}
-                />
-                <Tooltip
-                  cursor={{ stroke: "#52525b", strokeDasharray: "3 3" }}
-                  contentStyle={{
-                    borderRadius: 12,
-                    border: "1px solid #3f3f46",
-                    background: "#09090b",
-                    color: "#f4f4f5",
-                  }}
-                  formatter={(value: number, name: string) => [asCurrency(Number(value || 0)), name]}
-                  labelStyle={{ color: "#d4d4d8", fontWeight: 700 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="Receita"
-                  stroke="#84cc16"
-                  strokeWidth={3}
-                  dot={{ r: 2, fill: "#84cc16", strokeWidth: 0 }}
-                  activeDot={{ r: 5, fill: "#bef264", stroke: "#171717", strokeWidth: 2 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="Despesa"
-                  stroke="#ef4444"
-                  strokeWidth={3}
-                  dot={{ r: 2, fill: "#ef4444", strokeWidth: 0 }}
-                  activeDot={{ r: 5, fill: "#fca5a5", stroke: "#171717", strokeWidth: 2 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+            <article className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 md:p-5">
+              <h2 className="mb-2 text-2xl font-black tracking-tight text-zinc-100">Projecoes de Crescimento</h2>
+              <div className="h-[340px] w-full min-w-0">
+                <ResponsiveContainer width="100%" height="100%" minWidth={260} minHeight={260}>
+                  <AreaChart data={projectionData} margin={{ top: 20, right: 8, left: 0, bottom: 6 }}>
+                    <defs>
+                      <linearGradient id="growthFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#B6FF00" stopOpacity={0.45} />
+                        <stop offset="95%" stopColor="#B6FF00" stopOpacity={0.08} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="4 4" stroke="#243046" />
+                    <XAxis dataKey="year" stroke="#a1a1aa" tick={{ fill: "#a1a1aa", fontSize: 12 }} />
+                    <YAxis
+                      stroke="#a1a1aa"
+                      tick={{ fill: "#a1a1aa", fontSize: 12 }}
+                      tickFormatter={(value) => formatCompactCurrency(Number(value || 0))}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: 10,
+                        border: "1px solid #3f3f46",
+                        background: "#09090b",
+                        color: "#f4f4f5",
+                      }}
+                      formatter={(value: number) => [asCurrency(Number(value || 0)), "Total"]}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="total"
+                      stroke="#B6FF00"
+                      strokeWidth={2}
+                      fill="url(#growthFill)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </article>
+          </section>
 
-          <p className="mt-5 text-[11px] font-semibold tracking-wide text-zinc-500">
-            Pico observado no periodo: <span className="font-black text-zinc-300">{formatCompactCurrency(maxValue)}</span>
-          </p>
-        </div>
+          <section className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 md:p-5">
+            <h2 className="mb-2 text-2xl font-black tracking-tight text-zinc-100">Comparativo entre Empresas</h2>
+            <div className="h-[330px] w-full min-w-0">
+              <ResponsiveContainer width="100%" height="100%" minWidth={260} minHeight={240}>
+                <BarChart data={comparisonData} margin={{ top: 20, right: 12, left: 0, bottom: 6 }}>
+                  <CartesianGrid strokeDasharray="4 4" stroke="#243046" />
+                  <XAxis dataKey="name" stroke="#a1a1aa" tick={{ fill: "#a1a1aa", fontSize: 12 }} />
+                  <YAxis stroke="#a1a1aa" tick={{ fill: "#a1a1aa", fontSize: 12 }} />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: 10,
+                      border: "1px solid #3f3f46",
+                      background: "#09090b",
+                      color: "#f4f4f5",
+                    }}
+                  />
+                  <Legend
+                    wrapperStyle={{ color: "#d4d4d8", fontSize: "11px", fontWeight: 700 }}
+                    formatter={(value) => (
+                      <span className={value === "Desperdicio" ? "text-red-300" : "text-lime-300"}>{value}</span>
+                    )}
+                  />
+                  <Bar dataKey="Desperdicio" fill="#f87171" radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="Eficiencia" fill="#B6FF00" radius={[2, 2, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <p className="mt-4 text-xs text-zinc-500">
+              Pico financeiro do periodo: <span className="font-bold text-zinc-300">{formatCompactCurrency(maxValue)}</span>
+            </p>
+          </section>
+        </>
       )}
+
     </div>
   );
 };
