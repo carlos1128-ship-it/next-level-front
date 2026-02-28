@@ -74,6 +74,13 @@ const AuthProvider = ({ children }: { children?: ReactNode }) => {
   const { detailLevel, setDetailLevel } = useDetailLevel();
   const { theme, setTheme } = useTheme();
 
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      setIsLoggedIn(true);
+    }
+  }, []);
+
   const setSelectedCompanyId = (value: string | null) => {
     setSelectedCompanyIdState(value);
     if (value) {

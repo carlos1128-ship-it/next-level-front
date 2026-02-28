@@ -131,11 +131,15 @@ const LoginPage = () => {
 
     try {
       setLoading(true);
-      const { data } = await api.post<{ accessToken: string; user?: { name?: string } }>("/auth/login", {
+      const { data } = await api.post<{ accessToken?: string; access_token?: string; user?: { name?: string } }>("/auth/login", {
         email,
         password,
       });
-      localStorage.setItem("token", data.accessToken);
+      const token = data.access_token || data.accessToken;
+      if (!token) {
+        throw new Error("Token nao retornado no login.");
+      }
+      localStorage.setItem("token", token);
       login({ name: data.user?.name || email, email });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erro ao fazer login");

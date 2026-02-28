@@ -24,6 +24,7 @@ function endpointAllowsMissingCompany(endpoint: string) {
   return (
     normalized.startsWith("/auth") ||
     normalized.startsWith("/companies") ||
+    normalized.startsWith("/company") ||
     normalized.startsWith("/profile")
   );
 }

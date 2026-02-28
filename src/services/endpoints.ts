@@ -17,8 +17,9 @@ export async function getDashboardSummary() {
 }
 
 export async function getTransactions(companyId?: string) {
-  const endpoint = companyId ? `/finance/${companyId}` : "/finance";
-  const { data } = await api.get<TransactionItem[]>(endpoint);
+  const { data } = await api.get<TransactionItem[]>("/financial/transactions", {
+    params: companyId ? { companyId } : undefined,
+  });
   return data;
 }
 
@@ -35,13 +36,17 @@ export async function createTransaction(payload: {
     totalExpense: number;
     balance: number;
     transactionsCount: number;
-  }>("/finance", payload);
+  }>("/financial/transactions", {
+    ...payload,
+    amount: Number(payload.amount),
+    date: new Date().toISOString(),
+  });
   return data;
 }
 
 export async function getCompanies() {
   const { data } = await api.get<Company | Company[] | { companies?: Company[]; company?: Company }>(
-    "/companies"
+    "/company"
   );
 
   const companies = Array.isArray(data)
@@ -63,12 +68,16 @@ export async function createCompany(payload: {
   sector?: string;
   description?: string;
 }) {
-  const { data } = await api.post<Company | { company?: Company; data?: Company }>("/companies", payload);
-  if (data && typeof data === "object" && !Array.isArray(data)) {
-    if ((data as { company?: Company }).company) return (data as { company: Company }).company;
-    if ((data as { data?: Company }).data) return (data as { data: Company }).data;
+  const { data } = await api.post<Company | { company?: Company; data?: Company }>("/company", payload);
+  const normalizedData =
+    data && typeof data === "object" && !Array.isArray(data) && "company" in data
+      ? (data as { company?: Company }).company || data
+      : data;
+  if (normalizedData && typeof normalizedData === "object" && !Array.isArray(normalizedData)) {
+    if ((normalizedData as { company?: Company }).company) return (normalizedData as { company: Company }).company;
+    if ((normalizedData as { data?: Company }).data) return (normalizedData as { data: Company }).data;
   }
-  return data as Company;
+  return normalizedData as Company;
 }
 
 export async function analyzeData(payload: unknown, detailLevel: DetailLevel) {
