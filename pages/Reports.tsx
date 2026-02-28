@@ -136,8 +136,8 @@ const Reports = () => {
           description="Cadastre transacoes para gerar visualizacoes e exportacoes."
         />
       ) : (
-        <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-          <ResponsiveContainer width="100%" height={320}>
+        <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 min-w-0">
+          <ResponsiveContainer width="100%" minWidth={280} minHeight={260} height={320}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#a1a1aa" />
               <XAxis dataKey="name" stroke="#71717a" />

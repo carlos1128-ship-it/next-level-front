@@ -265,9 +265,9 @@ const Dashboard = () => {
                 Dados Reais
               </span>
             </div>
-            <div className="w-full relative z-10 min-h-0">
+            <div className="w-full relative z-10 min-h-0 min-w-0">
               {summary.lineData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={320}>
+                <ResponsiveContainer width="100%" minWidth={280} minHeight={260} height={320}>
                   <LineChart data={summary.lineData}>
                     <CartesianGrid strokeDasharray="4 4" stroke="#ffffff05" vertical={false} />
                     <XAxis
@@ -314,9 +314,9 @@ const Dashboard = () => {
 
           <div className="bg-white dark:bg-zinc-900 p-8 rounded-3xl border border-zinc-200 dark:border-zinc-800 flex flex-col items-center">
             <h3 className="text-xl font-black tracking-tighter mb-8 text-center">Mix de Produtos</h3>
-            <div className="w-full">
+            <div className="w-full min-w-0">
               {summary.pieData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={260}>
+                <ResponsiveContainer width="100%" minWidth={240} minHeight={220} height={260}>
                   <PieChart>
                     <Pie
                       data={summary.pieData}

@@ -124,9 +124,9 @@ const Insights = () => {
 
       <div className="rounded-3xl border border-zinc-200 bg-white p-8 dark:border-zinc-800 dark:bg-zinc-900">
         <h3 className="mb-8 text-xl font-black tracking-tighter text-zinc-900 dark:text-zinc-100">Distribuicao por Categoria</h3>
-        <div className="h-[350px] w-full">
+        <div className="h-[350px] w-full min-w-0">
           {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={280} minHeight={260}>
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#a1a1aa" />
                 <XAxis dataKey="name" stroke="#71717a" fontSize={11} />

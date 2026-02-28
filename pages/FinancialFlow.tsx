@@ -147,9 +147,9 @@ const FinancialFlow = () => {
         />
       ) : (
         <>
-          <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 min-w-0">
             {chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={320}>
+              <ResponsiveContainer width="100%" minWidth={280} minHeight={260} height={320}>
                 <AreaChart data={chartData}>
                   <defs>
                     <linearGradient id="colorEntradas" x1="0" y1="0" x2="0" y2="1">
