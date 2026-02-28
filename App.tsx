@@ -13,6 +13,7 @@ import { useTheme } from './src/hooks/useTheme';
 import type { DetailLevel } from './src/types/domain';
 import { getCompanies, getUserProfile } from './src/services/endpoints';
 import type { Company } from './src/types/domain';
+import api from './src/services/api';
 
 // Lazy load pages with heavy dependencies
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -101,11 +102,19 @@ const AuthProvider = ({ children }: { children?: ReactNode }) => {
   };
 
   const logout = () => {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (refreshToken) {
+      void api.post('/auth/logout', { refresh_token: refreshToken }).catch(() => {
+        // ignore logout API failure and clear local state anyway
+      });
+    }
+
     setIsLoggedIn(false);
     setUsername(null);
     setEmail(null);
     setSelectedCompanyId(null);
     localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
     localStorage.removeItem(AUTH_USER_STORAGE_KEY);
   };
 

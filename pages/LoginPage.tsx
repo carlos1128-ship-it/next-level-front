@@ -131,15 +131,26 @@ const LoginPage = () => {
 
     try {
       setLoading(true);
-      const response = await api.post<{ accessToken?: string; access_token?: string; user?: { name?: string } }>("/auth/login", {
+      const response = await api.post<{
+        accessToken?: string;
+        access_token?: string;
+        refreshToken?: string;
+        refresh_token?: string;
+        user?: { name?: string };
+      }>("/auth/login", {
         email,
         password,
       });
       const token = response.data.access_token || response.data.accessToken;
+      const refreshToken = response.data.refresh_token || response.data.refreshToken;
       if (!token) {
         throw new Error("Token nao retornado no login.");
       }
+      if (!refreshToken) {
+        throw new Error("Refresh token nao retornado no login.");
+      }
       localStorage.setItem("access_token", token);
+      localStorage.setItem("refresh_token", refreshToken);
       login({ name: response.data.user?.name || email, email });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erro ao fazer login");
