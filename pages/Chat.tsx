@@ -22,7 +22,7 @@ const normalizeText = (value: string) =>
     .trim();
 
 const Chat = () => {
-  const { username, detailLevel } = useAuth();
+  const { username, detailLevel, selectedCompanyId } = useAuth();
   const { addToast } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -48,7 +48,10 @@ const Chat = () => {
     setIsTyping(true);
 
     try {
-      const data = await chatWithAi({ message: userInput, detailLevel });
+      if (!selectedCompanyId) {
+        throw new Error("Selecione uma empresa para conversar com a IA.");
+      }
+      const data = await chatWithAi({ companyId: selectedCompanyId, message: userInput, detailLevel });
       const responseText =
         typeof data === "string" ? data : data.response || data.message || "Sem resposta.";
 

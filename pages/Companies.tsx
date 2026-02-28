@@ -73,6 +73,7 @@ const Companies = () => {
       setName("");
       setSector("");
       const refreshedCompanies = await loadCompanies();
+      window.dispatchEvent(new Event("companies:updated"));
       const existsInList = refreshedCompanies.some(
         (company) => getCompanyId(company) === createdCompanyId
       );

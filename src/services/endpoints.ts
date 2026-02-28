@@ -13,11 +13,14 @@ function extractCompanyId(company: Partial<Company> | null | undefined) {
 
 function normalizeTransaction(transaction: any): TransactionItem {
   const rawType = String(transaction?.type || "").toLowerCase();
+  const normalizedDate =
+    transaction?.date || transaction?.occurredAt || transaction?.createdAt || new Date().toISOString();
   return {
     ...transaction,
     type: rawType === "income" ? "income" : "expense",
     amount: Number(transaction?.amount || 0),
-    createdAt: transaction?.createdAt || transaction?.occurredAt || new Date().toISOString(),
+    date: normalizedDate,
+    createdAt: transaction?.createdAt || normalizedDate,
   } as TransactionItem;
 }
 
@@ -39,6 +42,7 @@ export async function createTransaction(payload: {
   amount: number;
   description: string;
   category?: string;
+  date: string;
   manual?: boolean;
 }) {
   const { data } = await api.post<{
@@ -50,7 +54,7 @@ export async function createTransaction(payload: {
   }>("/financial/transactions", {
     ...payload,
     amount: Number(payload.amount),
-    date: new Date().toISOString(),
+    date: new Date(payload.date).toISOString(),
   });
   return {
     ...data,
@@ -126,10 +130,24 @@ export async function changePassword(payload: {
 }
 
 export async function chatWithAi(payload: {
+  companyId: string;
   message: string;
   detailLevel: DetailLevel;
 }) {
   const { data } = await api.post<{ response?: string; message?: string } | string>("/chat", payload);
+  return data;
+}
+
+export async function getFinancialReport(companyId: string) {
+  const { data } = await api.get<{ income: number; expense: number; balance: number }>(
+    "/financial/report",
+    { params: { companyId } }
+  );
+  return data;
+}
+
+export async function deleteMyAccount() {
+  const { data } = await api.delete<{ success: boolean }>("/profile");
   return data;
 }
 
