@@ -8,11 +8,7 @@ function normalizeBaseUrl(url: string) {
   return /\/api$/i.test(trimmed) ? trimmed : `${trimmed}/api`;
 }
 
-const runtimeApiUrl =
-  env.NEXT_PUBLIC_API_URL ||
-  (typeof process !== "undefined" ? process.env?.NEXT_PUBLIC_API_URL : undefined) ||
-  env.VITE_API_URL ||
-  "";
+const runtimeApiUrl = env.VITE_API_URL || "";
 
 const configuredApiUrl = runtimeApiUrl.trim();
 
@@ -62,7 +58,7 @@ function getSelectedCompanyId() {
 
 if (!API_URL) {
   // Keep app booting, but requests will fail with explicit message in interceptor.
-  console.warn("NEXT_PUBLIC_API_URL nao configurada.");
+  console.warn("VITE_API_URL nao configurada.");
 }
 
 export const api = axios.create({
@@ -75,7 +71,7 @@ export const api = axios.create({
 
 api.interceptors.request.use((config) => {
   if (!API_URL) {
-    throw new Error("NEXT_PUBLIC_API_URL nao configurada.");
+    throw new Error("VITE_API_URL nao configurada.");
   }
 
   const token = localStorage.getItem("token");
@@ -117,6 +113,14 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("selectedCompanyId");
+      localStorage.removeItem("auth_user");
+      if (!window.location.hash.includes("/login")) {
+        window.location.assign("/#/login");
+      }
+    }
     throw buildApiError(error);
   }
 );
