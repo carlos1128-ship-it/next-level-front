@@ -14,6 +14,7 @@ export interface TransactionItem {
   type: "income" | "expense";
   description: string;
   amount: number;
+  date?: string;
   createdAt: string;
   category?: string;
 }
@@ -32,4 +33,5 @@ export interface UserProfile {
   email?: string;
   detailLevel?: DetailLevel;
   theme?: "light" | "dark";
+  companyCount?: number;
 }

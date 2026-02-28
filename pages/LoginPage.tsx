@@ -3,6 +3,13 @@ import { useAuth } from "../App";
 import { EyeIcon, EyeOffIcon } from "../components/icons";
 import { api } from "../services/api";
 
+function getFirstString(values: unknown[]): string | null {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value;
+  }
+  return null;
+}
+
 const Splash = ({ onDone }: { onDone: () => void }) => {
   const brand = "NEXT LEVEL";
   const letters = brand.split("");
@@ -131,15 +138,41 @@ const LoginPage = () => {
 
     try {
       setLoading(true);
-      const response = await api.post<{ accessToken?: string; access_token?: string; user?: { name?: string } }>("/auth/login", {
+      const response = await api.post<{
+        accessToken?: string;
+        access_token?: string;
+        refreshToken?: string;
+        refresh_token?: string;
+        user?: { name?: string };
+      }>("/auth/login", {
         email,
         password,
       });
-      const token = response.data.access_token || response.data.accessToken;
+      const payload = response.data as Record<string, unknown>;
+      const nestedData = (payload.data || payload.result || payload.tokens || {}) as Record<string, unknown>;
+      const token = getFirstString([
+        payload.access_token,
+        payload.accessToken,
+        payload.token,
+        nestedData.access_token,
+        nestedData.accessToken,
+        nestedData.token,
+      ]);
+      const refreshToken = getFirstString([
+        payload.refresh_token,
+        payload.refreshToken,
+        nestedData.refresh_token,
+        nestedData.refreshToken,
+      ]);
       if (!token) {
         throw new Error("Token nao retornado no login.");
       }
       localStorage.setItem("access_token", token);
+      if (refreshToken) {
+        localStorage.setItem("refresh_token", refreshToken);
+      } else {
+        localStorage.removeItem("refresh_token");
+      }
       login({ name: response.data.user?.name || email, email });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erro ao fazer login");

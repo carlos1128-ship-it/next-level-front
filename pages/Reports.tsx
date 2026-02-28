@@ -11,23 +11,39 @@ import {
 import { useToast } from "../components/Toast";
 import { getErrorMessage } from "../src/services/error";
 import { EmptyState, ErrorState, LoadingState } from "../components/AsyncState";
-import { exportFinancialCsv, getTransactions } from "../src/services/endpoints";
+import { exportFinancialCsv, getFinancialReport, getTransactions } from "../src/services/endpoints";
 import type { TransactionItem } from "../src/types/domain";
+import { useAuth } from "../App";
 
 const Reports = () => {
+  const { selectedCompanyId } = useAuth();
   const { addToast } = useToast();
   const [transactions, setTransactions] = useState<TransactionItem[]>([]);
+  const [totals, setTotals] = useState({ income: 0, expense: 0, balance: 0 });
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = async () => {
+    if (!selectedCompanyId) {
+      setTransactions([]);
+      setTotals({ income: 0, expense: 0, balance: 0 });
+      setLoadError("Selecione uma empresa para gerar o relatorio.");
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setLoadError(null);
-      const data = await getTransactions();
+      const [data, report] = await Promise.all([
+        getTransactions(selectedCompanyId),
+        getFinancialReport(selectedCompanyId),
+      ]);
       setTransactions(Array.isArray(data) ? data : []);
+      setTotals(report);
     } catch (error) {
       setTransactions([]);
+      setTotals({ income: 0, expense: 0, balance: 0 });
       const message = getErrorMessage(error, "Nao foi possivel carregar o relatorio.");
       setLoadError(message);
       addToast(message, "error");
@@ -38,7 +54,7 @@ const Reports = () => {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [selectedCompanyId]);
 
   const safeTransactions = Array.isArray(transactions) ? transactions : [];
 
@@ -90,6 +106,21 @@ const Reports = () => {
         </button>
       </div>
 
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">Income</p>
+          <p className="mt-1 text-2xl font-bold text-lime-500">R$ {totals.income.toFixed(2)}</p>
+        </div>
+        <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">Expense</p>
+          <p className="mt-1 text-2xl font-bold text-red-500">R$ {totals.expense.toFixed(2)}</p>
+        </div>
+        <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">Balance</p>
+          <p className="mt-1 text-2xl font-bold text-zinc-900 dark:text-zinc-100">R$ {totals.balance.toFixed(2)}</p>
+        </div>
+      </div>
+
       {loading ? (
         <LoadingState label="Carregando relatorio..." />
       ) : loadError ? (
@@ -105,8 +136,8 @@ const Reports = () => {
           description="Cadastre transacoes para gerar visualizacoes e exportacoes."
         />
       ) : (
-        <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-          <ResponsiveContainer width="100%" height={320}>
+        <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 min-w-0">
+          <ResponsiveContainer width="100%" minWidth={280} minHeight={260} height={320}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#a1a1aa" />
               <XAxis dataKey="name" stroke="#71717a" />

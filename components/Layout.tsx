@@ -1,4 +1,4 @@
-import React, { ReactNode, useState } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import type { NavItem } from "../types";
 import {
@@ -15,6 +15,8 @@ import {
   CreditCardIcon,
 } from "./icons";
 import { useAuth } from "../App";
+import { getCompanies } from "../src/services/endpoints";
+import type { Company } from "../src/types/domain";
 
 const navItems: NavItem[] = [
   { path: "/", name: "Inicio", icon: HomeIcon, isPrimary: true },
@@ -73,11 +75,37 @@ const Sidebar = () => {
 };
 
 const Header = () => {
-  const { username } = useAuth();
+  const { username, selectedCompanyId, setSelectedCompanyId } = useAuth();
+  const [companies, setCompanies] = useState<Company[]>([]);
+
+  const loadCompanies = () => {
+    getCompanies()
+      .then((list) => setCompanies(Array.isArray(list) ? list : []))
+      .catch(() => setCompanies([]));
+  };
+
+  useEffect(() => {
+    loadCompanies();
+    window.addEventListener("companies:updated", loadCompanies);
+    return () => window.removeEventListener("companies:updated", loadCompanies);
+  }, []);
+
   return (
     <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-zinc-200 bg-white/90 px-6 backdrop-blur lg:justify-end lg:px-8 dark:border-zinc-800 dark:bg-zinc-950/90">
       <div className="text-lg font-black text-lime-500 lg:hidden">NEXT LEVEL</div>
       <div className="flex items-center gap-4">
+        <select
+          value={selectedCompanyId || ""}
+          onChange={(e) => setSelectedCompanyId(e.target.value || null)}
+          className="max-w-[220px] rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-semibold text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+        >
+          <option value="">Selecionar empresa</option>
+          {companies.map((company) => (
+            <option key={company.id || company._id || company.name} value={company.id || company._id || ""}>
+              {company.name}
+            </option>
+          ))}
+        </select>
         <Link to="/settings" className="p-2 text-zinc-600 transition-colors hover:text-lime-500 dark:text-zinc-400" aria-label="Configuracoes">
           <SettingsIcon className="h-5 w-5" />
         </Link>
