@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { AxiosError } from "axios";
 import {
   LineChart,
   Line,
@@ -41,6 +42,8 @@ const EMPTY_SUMMARY: DashboardSummary = {
 
 const PIE_COLORS = ["#B6FF00", "#87B900", "#6D9200", "#547100"];
 const PERIODS = ["Hoje", "Ontem", "Semana", "Mes", "Ano"];
+const ANALYZE_COOLDOWN_KEY = "dashboard_ai_analyze_cooldown_until";
+const ANALYZE_COOLDOWN_MS = 5 * 60 * 1000;
 
 const asCurrency = (value: number) =>
   `R$ ${Number(value || 0).toLocaleString("pt-BR", {
@@ -155,14 +158,23 @@ const Dashboard = () => {
   const hasChartData = chartData.length > 0 || pieData.length > 0;
 
   const runAnalyze = async (payload: DashboardSummary) => {
+    const cooldownUntil = Number(localStorage.getItem(ANALYZE_COOLDOWN_KEY) || 0);
+    if (cooldownUntil > Date.now()) return;
+
     try {
       const response = await analyzeData(payload, detailLevel);
       const text =
         typeof response === "string"
           ? response
           : response.analysis || response.insight || response.message || "";
+      localStorage.removeItem(ANALYZE_COOLDOWN_KEY);
       setAiInsight(normalizeAiText(text));
-    } catch {
+    } catch (error) {
+      const status = error instanceof AxiosError ? error.response?.status : undefined;
+      const message = getErrorMessage(error, "").toLowerCase();
+      if (status === 429 || message.includes("limite da ia") || message.includes("quota")) {
+        localStorage.setItem(ANALYZE_COOLDOWN_KEY, String(Date.now() + ANALYZE_COOLDOWN_MS));
+      }
       setAiInsight("");
     }
   };
