@@ -1,11 +1,14 @@
 export type DetailLevel = "low" | "medium" | "high";
+export type DashboardPeriod = "today" | "yesterday" | "week" | "month" | "year";
 
 export interface DashboardSummary {
   revenue: number;
-  conversion: number;
-  cac: number;
-  retention: number;
-  lineData: Array<{ name: string; Vendas: number; Picos?: number }>;
+  losses: number;
+  profit: number;
+  cashflow: number;
+  companyCount: number;
+  period: DashboardPeriod;
+  lineData: Array<{ name: string; Receitas: number; Saidas: number }>;
   pieData: Array<{ name: string; value: number }>;
 }
 
@@ -24,6 +27,10 @@ export interface Company {
   _id?: string;
   name: string;
   sector?: string;
+  segment?: string;
+  document?: string;
+  description?: string;
+  openedAt?: string;
   status?: string;
 }
 

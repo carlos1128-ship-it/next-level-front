@@ -1,6 +1,7 @@
 import api from "./api";
 import type {
   Company,
+  DashboardPeriod,
   DashboardSummary,
   DetailLevel,
   TransactionItem,
@@ -24,8 +25,16 @@ function normalizeTransaction(transaction: any): TransactionItem {
   } as TransactionItem;
 }
 
-export async function getDashboardSummary() {
-  const { data } = await api.get<Partial<DashboardSummary>>("/dashboard/summary");
+export async function getDashboardSummary(params?: {
+  companyId?: string | null;
+  period?: DashboardPeriod;
+}) {
+  const { data } = await api.get<Partial<DashboardSummary>>("/dashboard/summary", {
+    params: {
+      companyId: params?.companyId || undefined,
+      period: params?.period || undefined,
+    },
+  });
   return data;
 }
 
@@ -84,7 +93,10 @@ export async function createCompany(payload: {
   name: string;
   userId?: string;
   sector?: string;
+  segment?: string;
+  document?: string;
   description?: string;
+  openedAt?: string;
 }) {
   const { data } = await api.post<Company | { company?: Company; data?: Company }>("/company", payload);
   const normalizedData =
@@ -160,8 +172,11 @@ export async function deleteMyAccount() {
   return data;
 }
 
-export async function exportFinancialCsv() {
+export async function exportFinancialCsv(params?: { companyId?: string | null }) {
   const { data } = await api.get<Blob>("/export/financial", {
+    params: {
+      companyId: params?.companyId || undefined,
+    },
     responseType: "blob",
   });
   return data;
