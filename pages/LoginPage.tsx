@@ -118,6 +118,7 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
 
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   const resetForm = () => {
     setName("");
@@ -174,8 +175,19 @@ const LoginPage = () => {
         localStorage.removeItem("refresh_token");
       }
       login({ name: response.data.user?.name || email, email });
+      navigate("/", { replace: true });
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Erro ao fazer login");
+      if (err && typeof err === "object" && "response" in err) {
+        const response = (err as { response?: { data?: any } }).response;
+        const message =
+          response?.data?.message ||
+          response?.data?.error ||
+          response?.data?.detail ||
+          "Erro ao fazer login";
+        setError(String(message));
+      } else {
+        setError(err instanceof Error ? err.message : "Erro ao fazer login");
+      }
     } finally {
       setLoading(false);
     }
@@ -301,3 +313,4 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
+

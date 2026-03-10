@@ -84,6 +84,11 @@ function shouldSkipAuthRetry(config: InternalAxiosRequestConfig) {
   return url.includes('/auth/login') || url.includes('/auth/register') || url.includes('/auth/refresh');
 }
 
+function shouldAttachAuthHeader(config: InternalAxiosRequestConfig) {
+  const url = config.url || '';
+  return !(url.includes('/auth/login') || url.includes('/auth/register') || url.includes('/auth/refresh'));
+}
+
 const api = axios.create({
   baseURL,
 });
@@ -92,7 +97,7 @@ api.interceptors.request.use((config) => {
   const token = localStorage.getItem(ACCESS_TOKEN_KEY);
 
   config.headers = new AxiosHeaders(config.headers);
-  if (token) {
+  if (token && shouldAttachAuthHeader(config)) {
     config.headers.set('Authorization', `Bearer ${token}`);
   }
 
