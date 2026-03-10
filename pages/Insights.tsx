@@ -126,6 +126,32 @@ const Insights = () => {
   const loadInsights = async () => {
     try {
       setLoading(true);
+      // 1) tentar histórico de IA (LLM)
+      const aiHistory = await api
+        .get("/ai/history")
+        .then((res) => (Array.isArray(res.data) ? res.data : []))
+        .catch(() => []);
+
+      const normalizedAi = aiHistory
+        .map((item: any) => {
+          const baseDescription = sanitizeInsight(String(item?.description ?? item?.content ?? ""));
+          if (!baseDescription) return null;
+          const category = item?.category || inferCategory(baseDescription);
+          return {
+            title: item?.title || "Insight da IA",
+            description: compactText(baseDescription),
+            category,
+            color: inferColor(category),
+          } as InsightCardProps;
+        })
+        .filter(Boolean) as InsightCardProps[];
+
+      if (normalizedAi.length) {
+        setHistoryInsights(normalizedAi.slice(0, 4));
+        return;
+      }
+
+      // 2) fallback para insights analíticos do backend
       const { data } = await api.get("/insights", {
         params: { companyId: selectedCompanyId || undefined },
       });
@@ -134,6 +160,7 @@ const Insights = () => {
         ? data
             .map((item: any) => {
               const baseDescription = sanitizeInsight(String(item?.description ?? ""));
+              if (!baseDescription) return null;
               const description =
                 item?.value != null ? `${baseDescription} • ${item.value}` : baseDescription;
               const category =
@@ -167,7 +194,7 @@ const Insights = () => {
                 color: colorMap[category] || inferColor(category),
               };
             })
-            .filter((item: InsightCardProps) => item.description)
+            .filter(Boolean) as InsightCardProps[]
         : [];
 
       setHistoryInsights(parsed);
