@@ -119,9 +119,45 @@ const benchmarkData = [
 
 const Insights = () => {
   const { addToast } = useToast();
-  const { selectedCompanyId } = useAuth();
+  const { selectedCompanyId, detailLevel } = useAuth();
   const [historyInsights, setHistoryInsights] = useState<InsightCardProps[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const isOfflineInsight = (text: string) =>
+    text.toLowerCase().includes("modo offline") || text.toLowerCase().includes("heuristica");
+
+  const generateFreshAiInsight = async (): Promise<InsightCardProps[]> => {
+    try {
+      const { data: summary } = await api.get("/dashboard/summary", {
+        params: { companyId: selectedCompanyId || undefined },
+      });
+
+      const { data } = await api.post("/ai/analyze", {
+        data: summary,
+        detailLevel,
+      });
+
+      const text =
+        typeof data === "string"
+          ? data
+          : data.analysis || data.insight || data.message || JSON.stringify(data);
+
+      const cleaned = compactText(sanitizeInsight(text));
+      if (!cleaned) return [];
+
+      return [
+        {
+          title: "Insight da IA",
+          description: cleaned,
+          category: "Sugestao da IA",
+          color: "purple",
+        },
+      ];
+    } catch (error) {
+      console.warn("AI analyze failed, falling back to analytics insights", error);
+      return [];
+    }
+  };
 
   const loadInsights = async () => {
     try {
@@ -146,8 +182,14 @@ const Insights = () => {
         })
         .filter(Boolean) as InsightCardProps[];
 
-      if (normalizedAi.length) {
+      if (normalizedAi.length && normalizedAi.some((item) => !isOfflineInsight(item.description))) {
         setHistoryInsights(normalizedAi.slice(0, 4));
+        return;
+      }
+
+      const freshAi = await generateFreshAiInsight();
+      if (freshAi.length) {
+        setHistoryInsights(freshAi);
         return;
       }
 
