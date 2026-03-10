@@ -105,7 +105,7 @@ const KpiCard: React.FC<
   KpiCardProps & { iconAccent?: string }
 > = ({ title, value, change, changeType, icon: Icon, color, iconAccent }) => {
   return (
-    <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6 transition-all duration-300 hover:border-lime-400/40">
+    <div className="min-w-[220px] rounded-3xl border border-zinc-800 bg-zinc-950 p-6 transition-all duration-300 hover:border-lime-400/40">
       <div className="mb-4 flex items-start justify-between">
         <span className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">
           {title}
@@ -114,7 +114,7 @@ const KpiCard: React.FC<
           <Icon className={`h-5 w-5 ${iconAccent || color}`} />
         </div>
       </div>
-      <p className="text-[clamp(22px,4vw,32px)] md:text-[clamp(26px,4vw,36px)] font-black leading-tight tracking-tighter text-zinc-100 break-words">
+      <p className="text-[clamp(20px,2.6vw,30px)] md:text-[clamp(22px,2.2vw,32px)] font-black leading-tight tracking-tighter text-zinc-100 whitespace-nowrap overflow-hidden text-ellipsis">
         {value}
       </p>
       <div
@@ -300,7 +300,7 @@ const Dashboard = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-5">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
         <KpiCard
           title="Faturamento"
           value={asCurrency(summary.revenue)}
