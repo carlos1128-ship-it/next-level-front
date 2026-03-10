@@ -12,6 +12,7 @@ import { api } from "../services/api";
 import { getErrorMessage } from "../src/services/error";
 import { useToast } from "../components/Toast";
 import { LoadingState } from "../components/AsyncState";
+import { useAuth } from "../App";
 
 interface InsightCardProps {
   title: string;
@@ -118,23 +119,52 @@ const benchmarkData = [
 
 const Insights = () => {
   const { addToast } = useToast();
+  const { selectedCompanyId } = useAuth();
   const [historyInsights, setHistoryInsights] = useState<InsightCardProps[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadAiHistory = async () => {
+  const loadInsights = async () => {
     try {
       setLoading(true);
-      const { data } = await api.get("/ai/history");
+      const { data } = await api.get("/insights", {
+        params: { companyId: selectedCompanyId || undefined },
+      });
+
       const parsed = Array.isArray(data)
         ? data
             .map((item: any) => {
-              const rawDescription = sanitizeInsight(item?.description ?? item?.content ?? "");
-              const category = item?.category || inferCategory(String(rawDescription));
+              const baseDescription = sanitizeInsight(String(item?.description ?? ""));
+              const description =
+                item?.value != null ? `${baseDescription} • ${item.value}` : baseDescription;
+              const category =
+                item?.type === "metric"
+                  ? "Metrica"
+                  : item?.type === "peak"
+                    ? "Pico"
+                    : item?.type === "product"
+                      ? "Produto"
+                      : item?.type === "growth"
+                        ? "Crescimento"
+                        : item?.type === "alert"
+                          ? "Alerta"
+                          : item?.type === "info"
+                            ? "Info"
+                            : inferCategory(String(baseDescription));
+
+              const colorMap: Record<string, InsightCardProps["color"]> = {
+                Metrica: "blue",
+                Pico: "purple",
+                Produto: "green",
+                Crescimento: "green",
+                Alerta: "red",
+                Info: "blue",
+              };
+
               return {
                 title: item?.title ?? "Insight da IA",
-                description: compactText(String(rawDescription)),
+                description: compactText(description),
                 category,
-                color: inferColor(category),
+                color: colorMap[category] || inferColor(category),
               };
             })
             .filter((item: InsightCardProps) => item.description)
@@ -150,8 +180,8 @@ const Insights = () => {
   };
 
   useEffect(() => {
-    loadAiHistory();
-  }, []);
+    void loadInsights();
+  }, [selectedCompanyId]);
 
   const cards = useMemo(() => {
     if (historyInsights.length >= 4) return historyInsights.slice(0, 4);
