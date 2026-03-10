@@ -114,7 +114,9 @@ const KpiCard: React.FC<
           <Icon className={`h-5 w-5 ${iconAccent || color}`} />
         </div>
       </div>
-      <p className="text-3xl font-black tracking-tighter text-zinc-100 md:text-4xl">{value}</p>
+      <p className="text-[clamp(22px,4vw,32px)] md:text-[clamp(26px,4vw,36px)] font-black leading-tight tracking-tighter text-zinc-100 break-words">
+        {value}
+      </p>
       <div
         className={`mt-2 flex items-center text-[11px] font-black ${
           changeType === "increase" ? "text-lime-400" : "text-red-500"
