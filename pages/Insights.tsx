@@ -38,8 +38,22 @@ function inferColor(category: string): InsightCardProps["color"] {
 
 function compactText(value: string): string {
   const clean = value.replace(/\s+/g, " ").trim();
-  if (clean.length <= 420) return clean;
-  return `${clean.slice(0, 420)}...`;
+  if (clean.length <= 280) return clean;
+  return `${clean.slice(0, 280)}...`;
+}
+
+function sanitizeInsight(value: string): string {
+  let text = value || "";
+  // remove markdown bold markers and headings
+  text = text.replace(/\*\*/g, "");
+  // drop JSON blobs after "Dados:"
+  const dadosIdx = text.toLowerCase().indexOf("dados:");
+  if (dadosIdx >= 0) {
+    text = text.slice(0, dadosIdx).trim();
+  }
+  // collapse multiple newlines
+  text = text.replace(/\n{2,}/g, "\n");
+  return text.trim();
 }
 
 const InsightCard: React.FC<InsightCardProps> = ({ title, description, category, color }) => {
@@ -114,7 +128,7 @@ const Insights = () => {
       const parsed = Array.isArray(data)
         ? data
             .map((item: any) => {
-              const rawDescription = item?.description ?? item?.content ?? "";
+              const rawDescription = sanitizeInsight(item?.description ?? item?.content ?? "");
               const category = item?.category || inferCategory(String(rawDescription));
               return {
                 title: item?.title ?? "Insight da IA",
