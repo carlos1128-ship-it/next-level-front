@@ -114,7 +114,7 @@ const KpiCard: React.FC<
           <Icon className={`h-5 w-5 ${iconAccent || color}`} />
         </div>
       </div>
-      <p className="text-[clamp(22px,2.8vw,34px)] md:text-[clamp(24px,2.4vw,38px)] font-black leading-none tracking-tighter text-zinc-100 whitespace-nowrap sm:whitespace-nowrap overflow-hidden">
+      <p className="text-[clamp(22px,2.4vw,32px)] md:text-[clamp(24px,2.2vw,36px)] font-black leading-none tracking-tighter text-zinc-100 whitespace-normal break-words">
         {value}
       </p>
       <div
