@@ -4,6 +4,10 @@ import type {
   DashboardPeriod,
   DashboardSummary,
   DetailLevel,
+  Customer,
+  OperationalCost,
+  PaginatedResponse,
+  Product,
   TransactionItem,
   UserProfile,
 } from "../types/domain";
@@ -23,6 +27,100 @@ function normalizeTransaction(transaction: any): TransactionItem {
     date: normalizedDate,
     createdAt: transaction?.createdAt || normalizedDate,
   } as TransactionItem;
+}
+
+function normalizeProduct(product: any): Product {
+  const createdAt = product?.createdAt || product?.created_at || new Date().toISOString();
+  const updatedAt = product?.updatedAt || product?.updated_at || createdAt;
+  return {
+    id: product?.id || product?._id || "",
+    companyId: product?.companyId || product?.company_id || "",
+    name: product?.name || "",
+    sku: product?.sku ?? null,
+    category: product?.category ?? null,
+    price: Number(product?.price ?? 0),
+    cost: product?.cost === undefined || product?.cost === null ? null : Number(product.cost),
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+  } as Product;
+}
+
+function normalizeCustomer(customer: any): Customer {
+  const createdAt = customer?.createdAt || customer?.created_at || new Date().toISOString();
+  const updatedAt = customer?.updatedAt || customer?.updated_at || createdAt;
+  return {
+    id: customer?.id || customer?._id || "",
+    companyId: customer?.companyId || customer?.company_id || "",
+    name: customer?.name || "",
+    email: customer?.email ?? null,
+    phone: customer?.phone ?? null,
+    createdAt,
+    updatedAt,
+  } as Customer;
+}
+
+function normalizeCost(cost: any): OperationalCost {
+  const baseDate =
+    cost?.date || cost?.occurredAt || cost?.createdAt || cost?.created_at || new Date().toISOString();
+  const createdAt = cost?.createdAt || cost?.created_at || baseDate;
+  const updatedAt = cost?.updatedAt || cost?.updated_at || createdAt;
+  return {
+    id: cost?.id || cost?._id || "",
+    companyId: cost?.companyId || cost?.company_id || "",
+    name: cost?.name || "",
+    category: cost?.category ?? null,
+    amount: Number(cost?.amount ?? cost?.value ?? 0),
+    date: typeof baseDate === "string" ? baseDate : new Date(baseDate).toISOString(),
+    createdAt: typeof createdAt === "string" ? createdAt : new Date(createdAt).toISOString(),
+    updatedAt: typeof updatedAt === "string" ? updatedAt : new Date(updatedAt).toISOString(),
+  } as OperationalCost;
+}
+
+function asPaginated<T>(
+  payload:
+    | PaginatedResponse<T>
+    | T[]
+    | { data?: T[]; pagination?: PaginatedResponse<T>["pagination"] }
+    | undefined,
+  normalizer: (item: any) => T
+): PaginatedResponse<T> {
+  if (Array.isArray(payload)) {
+    const normalized = payload.map(normalizer);
+    const size = normalized.length;
+    return {
+      data: normalized,
+      pagination: {
+        page: 1,
+        limit: Math.max(1, size || 10),
+        total: size,
+        totalPages: size ? 1 : 0,
+      },
+    };
+  }
+
+  const rawData = payload && typeof payload === "object" && Array.isArray((payload as { data?: T[] }).data)
+    ? ((payload as { data?: T[] }).data as any[])
+    : [];
+  const data = rawData.map(normalizer);
+  const rawPagination =
+    (payload && typeof payload === "object" && (payload as PaginatedResponse<T>).pagination) || undefined;
+
+  const page = Number(rawPagination?.page) || 1;
+  const limit = Number(rawPagination?.limit) || (data.length || 10);
+  const total = Number(rawPagination?.total) || data.length;
+  const totalPages =
+    Number(rawPagination?.totalPages) ||
+    (limit > 0 ? Math.max(1, Math.ceil(total / limit)) : data.length ? 1 : 0);
+
+  return {
+    data,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages,
+    },
+  };
 }
 
 export async function getDashboardSummary(params?: {
@@ -165,6 +263,154 @@ export async function getFinancialReport(companyId: string) {
     { params: { companyId } }
   );
   return data;
+}
+
+export async function getProducts(params?: {
+  companyId?: string;
+  page?: number;
+  limit?: number;
+  search?: string;
+  category?: string;
+  minPrice?: number;
+  maxPrice?: number;
+}) {
+  const query = {
+    companyId: params?.companyId || undefined,
+    page: params?.page || undefined,
+    limit: params?.limit || undefined,
+    search: params?.search || undefined,
+    category: params?.category || undefined,
+    minPrice: params?.minPrice ?? undefined,
+    maxPrice: params?.maxPrice ?? undefined,
+  };
+
+  const { data } = await api.get<
+    PaginatedResponse<Product> | Product[] | { data?: Product[]; pagination?: PaginatedResponse<Product>["pagination"] }
+  >("/products", { params: query });
+
+  return asPaginated<Product>(data as any, normalizeProduct);
+}
+
+export async function createProduct(
+  companyId: string,
+  payload: { name: string; price: number; sku?: string; category?: string; cost?: number }
+) {
+  const { data } = await api.post<Product>("/products", { ...payload, companyId });
+  return normalizeProduct(data);
+}
+
+export async function updateProduct(
+  companyId: string,
+  id: string,
+  payload: Partial<{ name: string; price: number; sku?: string; category?: string; cost?: number }>
+) {
+  const { data } = await api.put<Product>(`/products/${id}`, { ...payload, companyId });
+  return normalizeProduct(data);
+}
+
+export async function deleteProduct(companyId: string, id: string) {
+  await api.delete(`/products/${id}`, { params: { companyId } });
+  return { deleted: true };
+}
+
+export async function getCustomers(params?: {
+  companyId?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}) {
+  const query = {
+    companyId: params?.companyId || undefined,
+    search: params?.search || undefined,
+    page: params?.page || undefined,
+    limit: params?.limit || undefined,
+  };
+
+  const { data } = await api.get<
+    PaginatedResponse<Customer> | Customer[] | { data?: Customer[]; pagination?: PaginatedResponse<Customer>["pagination"] }
+  >("/customers", { params: query });
+
+  return asPaginated<Customer>(data as any, normalizeCustomer);
+}
+
+export async function createCustomer(
+  companyId: string,
+  payload: { name: string; email?: string; phone?: string }
+) {
+  const { data } = await api.post<Customer>("/customers", { ...payload, companyId });
+  return normalizeCustomer(data);
+}
+
+export async function updateCustomer(
+  companyId: string,
+  id: string,
+  payload: Partial<{ name: string; email?: string; phone?: string }>
+) {
+  const { data } = await api.put<Customer>(`/customers/${id}`, { ...payload, companyId });
+  return normalizeCustomer(data);
+}
+
+export async function deleteCustomer(companyId: string, id: string) {
+  await api.delete(`/customers/${id}`, { params: { companyId } });
+  return { deleted: true };
+}
+
+export async function getCosts(params?: {
+  companyId?: string;
+  search?: string;
+  category?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  limit?: number;
+}) {
+  const query = {
+    companyId: params?.companyId || undefined,
+    search: params?.search || undefined,
+    category: params?.category || undefined,
+    startDate: params?.startDate || undefined,
+    endDate: params?.endDate || undefined,
+    page: params?.page || undefined,
+    limit: params?.limit || undefined,
+  };
+
+  const { data } = await api.get<
+    PaginatedResponse<OperationalCost> | OperationalCost[] | { data?: OperationalCost[]; pagination?: PaginatedResponse<OperationalCost>["pagination"] }
+  >("/costs", { params: query });
+
+  return asPaginated<OperationalCost>(data as any, normalizeCost);
+}
+
+export async function createCost(
+  companyId: string,
+  payload: { name: string; category?: string; amount: number; date: string }
+) {
+  const { data } = await api.post<OperationalCost>("/costs", {
+    ...payload,
+    companyId,
+    amount: Number(payload.amount),
+    date: new Date(payload.date).toISOString(),
+  });
+  return normalizeCost(data);
+}
+
+export async function updateCost(
+  companyId: string,
+  id: string,
+  payload: Partial<{ name: string; category?: string; amount?: number; date?: string }>
+) {
+  const { data } = await api.put<OperationalCost>(`/costs/${id}`, {
+    ...payload,
+    companyId,
+    amount: payload.amount === undefined ? undefined : Number(payload.amount),
+    date: payload.date ? new Date(payload.date).toISOString() : undefined,
+  });
+  return normalizeCost(data);
+}
+
+export async function deleteCost(companyId: string, id: string) {
+  await api.delete(`/costs/${id}`, { params: { companyId } });
+  return { deleted: true };
 }
 
 export async function deleteMyAccount() {

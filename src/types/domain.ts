@@ -42,3 +42,48 @@ export interface UserProfile {
   theme?: "light" | "dark";
   companyCount?: number;
 }
+
+export interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: Pagination;
+}
+
+export interface Product {
+  id: string;
+  companyId: string;
+  name: string;
+  sku?: string | null;
+  category?: string | null;
+  price: number;
+  cost?: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Customer {
+  id: string;
+  companyId: string;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OperationalCost {
+  id: string;
+  companyId: string;
+  name: string;
+  category?: string | null;
+  amount: number;
+  date: string;
+  createdAt: string;
+  updatedAt: string;
+}
