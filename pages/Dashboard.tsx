@@ -29,8 +29,9 @@ import {
   analyzeData,
   exportFinancialCsv,
   getDashboardSummary,
+  getForecast,
 } from "../src/services/endpoints";
-import type { DashboardPeriod, DashboardSummary } from "../src/types/domain";
+import type { DashboardPeriod, DashboardSummary, ForecastResponse } from "../src/types/domain";
 
 const EMPTY_SUMMARY: DashboardSummary = {
   revenue: 0,
@@ -51,6 +52,7 @@ const PERIODS: Array<{ label: string; value: DashboardPeriod }> = [
   { label: "Mes", value: "month" },
   { label: "Ano", value: "year" },
 ];
+const FORECAST_HORIZONS: Array<7 | 15 | 30> = [7, 15, 30];
 const ANALYZE_COOLDOWN_KEY = "dashboard_ai_analyze_cooldown_until";
 const ANALYZE_COOLDOWN_MS = 5 * 60 * 1000;
 
@@ -59,6 +61,13 @@ const asCurrency = (value: number) =>
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
+
+const formatDateLabel = (value?: string) => {
+  if (!value) return "";
+  const date = new Date(`${value}T00:00:00Z`);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+};
 
 const normalizeAiText = (raw: string) => {
   const lines = raw
@@ -140,6 +149,9 @@ const Dashboard = () => {
   const [aiInsight, setAiInsight] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
   const [activePeriod, setActivePeriod] = useState<DashboardPeriod>("today");
+  const [forecast, setForecast] = useState<ForecastResponse | null>(null);
+  const [forecastHorizon, setForecastHorizon] = useState<7 | 15 | 30>(30);
+  const [isForecastLoading, setIsForecastLoading] = useState(false);
 
   const formattedInsight = useMemo(() => normalizeAiText(aiInsight), [aiInsight]);
 
@@ -171,6 +183,39 @@ const Dashboard = () => {
   }, [summary.pieData]);
 
   const hasChartData = summary.lineData.length > 0 || summary.pieData.length > 0;
+  const hasForecast = forecast?.status === "ok" && forecastChartData.length > 0;
+
+  const forecastChartData = useMemo(() => {
+    if (!forecast || forecast.status !== "ok") return [];
+    const historical = forecast.historicalData || [];
+    const predicted = forecast.predictedData || [];
+    const combined = [...historical, ...predicted];
+
+    return combined.map((point, index) => {
+      const isFuture = index >= historical.length;
+      return {
+        date: point.date,
+        Real: isFuture ? null : point.value,
+        Forecast: isFuture ? point.value : null,
+      };
+    });
+  }, [forecast]);
+
+  const forecastStatusMessage = useMemo(() => {
+    if (!forecast) return "Carregando previsões...";
+    if (forecast.status === "insufficient_data") {
+      return forecast.message || "Dados insuficientes para gerar previsão.";
+    }
+    if (
+      forecast.confidenceInterval &&
+      typeof forecast.confidenceInterval.margin === "number" &&
+      typeof forecast.confidenceInterval.lower === "number" &&
+      typeof forecast.confidenceInterval.upper === "number"
+    ) {
+      return `Margem estimada ±${forecast.confidenceInterval.margin.toFixed(2)} | Confiança entre ${forecast.confidenceInterval.lower.toFixed(2)} e ${forecast.confidenceInterval.upper.toFixed(2)}`;
+    }
+    return "Previsão pronta";
+  }, [forecast]);
 
   const runAnalyze = async (payload: DashboardSummary) => {
     const cooldownUntil = Number(localStorage.getItem(ANALYZE_COOLDOWN_KEY) || 0);
@@ -223,9 +268,35 @@ const Dashboard = () => {
     }
   };
 
+  const loadForecast = async (horizonOverride?: 7 | 15 | 30) => {
+    if (!selectedCompanyId) {
+      setForecast(null);
+      return;
+    }
+    const horizon = horizonOverride || forecastHorizon;
+    setIsForecastLoading(true);
+    try {
+      const data = await getForecast({
+        companyId: selectedCompanyId,
+        type: "REVENUE",
+        horizon,
+      });
+      setForecast(data);
+    } catch (error) {
+      setForecast(null);
+      addToast(getErrorMessage(error, "Não foi possível carregar o forecast."), "error");
+    } finally {
+      setIsForecastLoading(false);
+    }
+  };
+
   useEffect(() => {
     void loadSummary();
   }, [detailLevel, selectedCompanyId, activePeriod]);
+
+  useEffect(() => {
+    void loadForecast(forecastHorizon);
+  }, [selectedCompanyId]);
 
   useEffect(() => {
     const onTransactionsUpdated = () => {
@@ -252,6 +323,11 @@ const Dashboard = () => {
     } catch (error) {
       addToast(getErrorMessage(error, "Falha ao exportar CSV."), "error");
     }
+  };
+
+  const handleHorizonChange = (value: 7 | 15 | 30) => {
+    setForecastHorizon(value);
+    void loadForecast(value);
   };
 
   const marginDirection = summary.profit >= 0 ? "increase" : "decrease";
@@ -434,6 +510,115 @@ const Dashboard = () => {
           </div>
         </div>
       )}
+
+      <div className="rounded-3xl border border-zinc-900 bg-zinc-950 p-7">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Modo Futuro</p>
+            <h3 className="text-2xl font-black tracking-tighter text-zinc-100 md:text-3xl">
+              Previsão de Receita
+            </h3>
+            <p className="text-sm text-zinc-500">
+              Projeção diária para os próximos {forecastHorizon} dias, com margem de confiança.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            {FORECAST_HORIZONS.map((value) => (
+              <button
+                key={value}
+                onClick={() => handleHorizonChange(value)}
+                className={`rounded-2xl px-4 py-2 text-[11px] font-black uppercase tracking-[0.14em] transition ${
+                  forecastHorizon === value
+                    ? "bg-lime-400 text-zinc-900"
+                    : "border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-zinc-200"
+                }`}
+              >
+                Próx {value}d
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-6">
+          {isForecastLoading ? (
+            <div className="grid place-items-center rounded-2xl border border-dashed border-zinc-800 px-6 py-12 text-zinc-500">
+              Calculando previsões...
+            </div>
+          ) : forecast?.status === "insufficient_data" ? (
+            <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 px-6 py-4 text-sm text-amber-200">
+              {forecastStatusMessage}
+            </div>
+          ) : !hasForecast ? (
+            <div className="grid place-items-center rounded-2xl border border-zinc-800 px-6 py-12 text-zinc-500">
+              Forecast indisponível no momento.
+            </div>
+          ) : (
+            <>
+              <div className="relative z-10 min-h-0 min-w-0">
+                <ResponsiveContainer width="100%" minWidth={280} minHeight={260} height={320}>
+                  <LineChart data={forecastChartData}>
+                    <CartesianGrid strokeDasharray="5 5" stroke="#1f2937" vertical={false} />
+                    <XAxis
+                      dataKey="date"
+                      stroke="#52525b"
+                      fontSize={11}
+                      fontWeight="800"
+                      axisLine={false}
+                      tickLine={false}
+                      tickFormatter={formatDateLabel}
+                      dy={10}
+                    />
+                    <YAxis
+                      stroke="#52525b"
+                      fontSize={11}
+                      fontWeight="800"
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      formatter={(value) => asCurrency(Number(value || 0))}
+                      labelFormatter={(label) => `Data: ${formatDateLabel(String(label))}`}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="Real"
+                      stroke="#B6FF00"
+                      strokeWidth={3}
+                      dot={false}
+                      name="Histórico"
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="Forecast"
+                      stroke="#38bdf8"
+                      strokeWidth={3}
+                      dot={false}
+                      strokeDasharray="6 6"
+                      name="Previsto"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="mt-4 flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-400">
+                <span className="rounded-full border border-zinc-800 bg-zinc-900 px-3 py-2 text-[11px] text-zinc-300">
+                  {forecastStatusMessage}
+                </span>
+                {forecast?.accuracyScore !== undefined && (
+                  <span className="rounded-full border border-zinc-800 bg-zinc-900 px-3 py-2 text-[11px] text-zinc-300">
+                    Acurácia estimada: {(forecast.accuracyScore * 100).toFixed(1)}%
+                  </span>
+                )}
+                {forecast?.generatedAt && (
+                  <span className="text-[11px] text-zinc-500">
+                    Atualizado em {formatDateLabel(forecast.generatedAt)}
+                  </span>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
 
       <div className="flex flex-col items-start gap-6 rounded-3xl border border-zinc-900 bg-zinc-950 p-7 md:flex-row md:items-center">
         <div className="min-w-0 flex-1">

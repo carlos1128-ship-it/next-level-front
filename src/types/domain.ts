@@ -97,3 +97,40 @@ export interface IntegrationStatus {
   externalId: string | null;
   updatedAt?: string | null;
 }
+
+export interface ForecastPoint {
+  date: string;
+  value: number;
+}
+
+export interface ForecastInterval {
+  lower: number;
+  upper: number;
+  margin: number;
+}
+
+export interface ForecastResponse {
+  status: "ok" | "insufficient_data";
+  type: "SALES" | "DEMAND" | "REVENUE";
+  historicalData?: ForecastPoint[];
+  predictedData?: ForecastPoint[];
+  confidenceInterval?: ForecastInterval;
+  accuracyScore?: number;
+  generatedAt?: string;
+  message?: string;
+}
+
+export type StrategicActionType = "MARKETING" | "ESTOQUE" | "FINANCEIRO";
+export type StrategicActionStatus = "SUGGESTED" | "APPROVED" | "EXECUTED" | "REJECTED";
+
+export interface StrategicAction {
+  id: string;
+  companyId: string;
+  title: string;
+  description: string;
+  type: StrategicActionType;
+  status: StrategicActionStatus;
+  impactScore: number;
+  payload: any;
+  createdAt: string;
+}

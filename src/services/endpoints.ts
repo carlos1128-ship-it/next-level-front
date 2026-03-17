@@ -12,6 +12,8 @@ import type {
   UserProfile,
   IntegrationStatus,
   IntegrationProvider,
+  ForecastResponse,
+  StrategicAction,
 } from "../types/domain";
 
 function extractCompanyId(company: Partial<Company> | null | undefined) {
@@ -448,6 +450,47 @@ export async function connectIntegration(
   const { data } = await api.post("/integrations/connect", {
     ...payload,
     companyId,
+  });
+  return data;
+}
+
+export async function getForecast(params: {
+  companyId?: string | null;
+  type: "SALES" | "DEMAND" | "REVENUE";
+  horizon?: number;
+}) {
+  const { data } = await api.get<ForecastResponse>(`/analytics/forecast/${params.type}`, {
+    params: {
+      companyId: params.companyId || undefined,
+      horizon: params.horizon || undefined,
+    },
+  });
+  return data;
+}
+
+export async function getStrategicActions(params?: {
+  companyId?: string | null;
+  status?: "SUGGESTED" | "APPROVED" | "EXECUTED" | "REJECTED";
+}) {
+  const { data } = await api.get<StrategicAction[] | { data?: StrategicAction[] }>(
+    "/strategy/actions",
+    {
+      params: {
+        companyId: params?.companyId || undefined,
+        status: params?.status || undefined,
+      },
+    }
+  );
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === "object" && Array.isArray((data as { data?: StrategicAction[] }).data)) {
+    return (data as { data?: StrategicAction[] }).data as StrategicAction[];
+  }
+  return [];
+}
+
+export async function executeStrategicAction(id: string, companyId?: string | null) {
+  const { data } = await api.post<StrategicAction>(`/strategy/actions/${id}/execute`, null, {
+    params: companyId ? { companyId } : undefined,
   });
   return data;
 }
