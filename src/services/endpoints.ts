@@ -10,6 +10,8 @@ import type {
   Product,
   TransactionItem,
   UserProfile,
+  IntegrationStatus,
+  IntegrationProvider,
 } from "../types/domain";
 
 function extractCompanyId(company: Partial<Company> | null | undefined) {
@@ -415,6 +417,38 @@ export async function deleteCost(companyId: string, id: string) {
 
 export async function deleteMyAccount() {
   const { data } = await api.delete<{ success: boolean }>("/profile");
+  return data;
+}
+
+export async function getIntegrationStatuses(companyId?: string | null) {
+  const { data } = await api.get<{ data?: IntegrationStatus[] } | IntegrationStatus[]>(
+    "/integrations/status",
+    {
+      params: companyId ? { companyId } : undefined,
+    }
+  );
+
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === "object" && Array.isArray((data as { data?: IntegrationStatus[] }).data)) {
+    return (data as { data?: IntegrationStatus[] }).data as IntegrationStatus[];
+  }
+
+  return [];
+}
+
+export async function connectIntegration(
+  companyId: string,
+  payload: {
+    provider: IntegrationProvider;
+    accessToken: string;
+    externalId: string;
+    status?: string;
+  }
+) {
+  const { data } = await api.post("/integrations/connect", {
+    ...payload,
+    companyId,
+  });
   return data;
 }
 

@@ -87,3 +87,13 @@ export interface OperationalCost {
   createdAt: string;
   updatedAt: string;
 }
+
+export type IntegrationProvider = "WHATSAPP" | "INSTAGRAM" | "MERCADOLIVRE";
+
+export interface IntegrationStatus {
+  provider: IntegrationProvider;
+  status: string;
+  connected: boolean;
+  externalId: string | null;
+  updatedAt?: string | null;
+}
