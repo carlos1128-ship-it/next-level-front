@@ -154,3 +154,45 @@ export interface MarketTrend {
   growthPercentage: number;
   createdAt?: string;
 }
+
+export type LeadStatus = "NEW" | "QUALIFIED" | "CONVERTED" | "LOST";
+
+export interface BotConfig {
+  id: string;
+  companyId: string;
+  botName: string;
+  welcomeMessage: string | null;
+  toneOfVoice: string;
+  instructions: string | null;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ChatConversation {
+  id: string;
+  leadId: string;
+  role: "USER" | "ASSISTANT";
+  content: string;
+  createdAt: string;
+}
+
+export interface Lead {
+  id: string;
+  companyId: string;
+  externalId: string;
+  name: string | null;
+  status: LeadStatus;
+  score: number;
+  lastInteraction: string | null;
+  botPausedUntil: string | null;
+  lastQuotedValue: number | null;
+  createdAt: string;
+  updatedAt: string;
+  conversations: ChatConversation[];
+}
+
+export interface AttendantRoi {
+  iaSalesCount: number;
+  iaRevenue: number;
+}

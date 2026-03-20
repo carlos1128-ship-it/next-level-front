@@ -16,6 +16,9 @@ import type {
   StrategicAction,
   MarketComparison,
   MarketTrend,
+  BotConfig,
+  Lead,
+  LeadStatus,
 } from "../types/domain";
 
 function extractCompanyId(company: Partial<Company> | null | undefined) {
@@ -102,6 +105,47 @@ function normalizeMarketTrend(item: any): MarketTrend {
     volume: Number(item?.volume ?? 0),
     growthPercentage: Number(item?.growthPercentage ?? item?.growth_percentage ?? 0),
     createdAt: typeof createdAt === "string" ? createdAt : new Date(createdAt).toISOString(),
+  };
+}
+
+function normalizeBotConfig(data: any): BotConfig {
+  return {
+    id: data?.id || "",
+    companyId: data?.companyId || data?.company_id || "",
+    botName: data?.botName || "Atendente IA",
+    welcomeMessage: data?.welcomeMessage ?? null,
+    toneOfVoice: data?.toneOfVoice || "amigavel",
+    instructions: data?.instructions ?? null,
+    isActive: Boolean(data?.isActive ?? true),
+    createdAt: data?.createdAt || new Date().toISOString(),
+    updatedAt: data?.updatedAt || data?.createdAt || new Date().toISOString(),
+  };
+}
+
+function normalizeLead(data: any): Lead {
+  const conversations = Array.isArray(data?.conversations)
+    ? data.conversations.map((c: any) => ({
+        id: c?.id || "",
+        leadId: c?.leadId || data?.id || "",
+        role: (c?.role as Lead["conversations"][number]["role"]) || "USER",
+        content: c?.content || "",
+        createdAt: c?.createdAt || new Date().toISOString(),
+      }))
+    : [];
+
+  return {
+    id: data?.id || "",
+    companyId: data?.companyId || "",
+    externalId: data?.externalId || "",
+    name: data?.name ?? null,
+    status: (data?.status as LeadStatus) || "NEW",
+    score: Number(data?.score ?? 0),
+    lastInteraction: data?.lastInteraction || null,
+    botPausedUntil: data?.botPausedUntil || null,
+    lastQuotedValue: data?.lastQuotedValue === null || data?.lastQuotedValue === undefined ? null : Number(data.lastQuotedValue),
+    createdAt: data?.createdAt || new Date().toISOString(),
+    updatedAt: data?.updatedAt || new Date().toISOString(),
+    conversations,
   };
 }
 
@@ -554,6 +598,52 @@ export async function refreshMarketTrends(companyId?: string | null) {
     { params: companyId ? { companyId } : undefined }
   );
   return data;
+}
+
+export async function getBotConfig(companyId?: string | null) {
+  const { data } = await api.get<BotConfig>("/attendant/config", {
+    params: companyId ? { companyId } : undefined,
+  });
+  return normalizeBotConfig(data);
+}
+
+export async function updateBotConfig(
+  companyId: string,
+  payload: Partial<Pick<BotConfig, "botName" | "welcomeMessage" | "toneOfVoice" | "instructions" | "isActive">>
+) {
+  const { data } = await api.put<BotConfig>(
+    "/attendant/config",
+    payload,
+    { params: companyId ? { companyId } : undefined }
+  );
+  return normalizeBotConfig(data);
+}
+
+export async function getAttendantLeads(params?: { companyId?: string | null; limit?: number }) {
+  const { data } = await api.get<any[]>("/attendant/leads", {
+    params: {
+      companyId: params?.companyId || undefined,
+      limit: params?.limit || undefined,
+    },
+  });
+  return Array.isArray(data) ? data.map(normalizeLead) : [];
+}
+
+export async function interveneLead(leadId: string, companyId?: string | null) {
+  const { data } = await api.post(`/attendant/leads/${leadId}/intervene`, null, {
+    params: companyId ? { companyId } : undefined,
+  });
+  return normalizeLead(data);
+}
+
+export async function getAttendantRoi(companyId?: string | null) {
+  const { data } = await api.get<{ iaSalesCount?: number; iaRevenue?: number }>("/attendant/roi", {
+    params: companyId ? { companyId } : undefined,
+  });
+  return {
+    iaSalesCount: Number(data?.iaSalesCount || 0),
+    iaRevenue: Number(data?.iaRevenue || 0),
+  };
 }
 
 export async function exportFinancialCsv(params?: { companyId?: string | null }) {

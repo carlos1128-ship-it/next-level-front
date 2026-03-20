@@ -22,6 +22,7 @@ import {
   ArrowDownRightIcon,
   LightbulbIcon,
   BuildingIcon,
+  MessageSquareIcon,
 } from "../components/icons";
 import { useToast } from "../components/Toast";
 import { getErrorMessage } from "../src/services/error";
@@ -30,8 +31,9 @@ import {
   exportFinancialCsv,
   getDashboardSummary,
   getForecast,
+  getAttendantRoi,
 } from "../src/services/endpoints";
-import type { DashboardPeriod, DashboardSummary, ForecastResponse } from "../src/types/domain";
+import type { DashboardPeriod, DashboardSummary, ForecastResponse, AttendantRoi } from "../src/types/domain";
 
 const EMPTY_SUMMARY: DashboardSummary = {
   revenue: 0,
@@ -152,6 +154,7 @@ const Dashboard = () => {
   const [forecast, setForecast] = useState<ForecastResponse | null>(null);
   const [forecastHorizon, setForecastHorizon] = useState<7 | 15 | 30>(30);
   const [isForecastLoading, setIsForecastLoading] = useState(false);
+  const [attendantRoi, setAttendantRoi] = useState<AttendantRoi>({ iaSalesCount: 0, iaRevenue: 0 });
 
   const formattedInsight = useMemo(() => normalizeAiText(aiInsight), [aiInsight]);
 
@@ -310,6 +313,22 @@ const Dashboard = () => {
     };
   }, [detailLevel, selectedCompanyId, activePeriod]);
 
+  useEffect(() => {
+    const loadRoi = async () => {
+      if (!selectedCompanyId) {
+        setAttendantRoi({ iaSalesCount: 0, iaRevenue: 0 });
+        return;
+      }
+      try {
+        const roi = await getAttendantRoi(selectedCompanyId);
+        setAttendantRoi(roi);
+      } catch (error) {
+        setAttendantRoi({ iaSalesCount: 0, iaRevenue: 0 });
+      }
+    };
+    void loadRoi();
+  }, [selectedCompanyId]);
+
   const handleExport = async () => {
     try {
       const blob = await exportFinancialCsv({ companyId: selectedCompanyId });
@@ -416,6 +435,15 @@ const Dashboard = () => {
           changeType="increase"
           icon={BuildingIcon}
           color="text-amber-400"
+        />
+        <KpiCard
+          title="ROI da IA"
+          value={`${attendantRoi.iaSalesCount} vendas`}
+          change={`Gerado pela IA: ${asCurrency(attendantRoi.iaRevenue)}`}
+          changeType="increase"
+          icon={MessageSquareIcon}
+          color="text-cyan-400"
+          iconAccent="text-cyan-300"
         />
       </div>
 

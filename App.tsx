@@ -26,6 +26,7 @@ const Customers = lazy(() => import('./pages/Customers'));
 const Costs = lazy(() => import('./pages/Costs'));
 const CommandCenter = lazy(() => import('./pages/CommandCenter'));
 const MarketIntel = lazy(() => import('./pages/MarketIntel'));
+const Attendant = lazy(() => import('./pages/Attendant'));
 
 // Authentication Context
 interface AuthContextType {
@@ -250,6 +251,7 @@ const AppContent = () => {
           <Route path="/customers" element={<ProtectedRoute><Layout><Customers /></Layout></ProtectedRoute>} />
           <Route path="/costs" element={<ProtectedRoute><Layout><Costs /></Layout></ProtectedRoute>} />
           <Route path="/market-intel" element={<ProtectedRoute><Layout><MarketIntel /></Layout></ProtectedRoute>} />
+          <Route path="/attendant" element={<ProtectedRoute><Layout><Attendant /></Layout></ProtectedRoute>} />
           <Route path="/command-center" element={<ProtectedRoute><Layout><CommandCenter /></Layout></ProtectedRoute>} />
           <Route path="/plans" element={<ProtectedRoute><Layout><Plans /></Layout></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" />} />
