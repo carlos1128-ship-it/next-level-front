@@ -134,3 +134,23 @@ export interface StrategicAction {
   payload: any;
   createdAt: string;
 }
+
+export type MarketBadge = 'sem_dados' | 'competitivo' | 'acima';
+
+export interface MarketComparison {
+  productId: string;
+  productName: string;
+  internalPrice: number;
+  marketAverage: number;
+  gapPct: number;
+  badge: MarketBadge;
+}
+
+export interface MarketTrend {
+  id?: string;
+  companyId?: string;
+  term: string;
+  volume: number;
+  growthPercentage: number;
+  createdAt?: string;
+}

@@ -16,6 +16,7 @@ import {
   PackageIcon,
   UsersIcon,
   ReceiptIcon,
+  RadarIcon,
 } from "./icons";
 import { useAuth } from "../App";
 
@@ -24,6 +25,7 @@ const navItems: NavItem[] = [
   { path: "/reports", name: "Relatorios", icon: BarChartIcon, isPrimary: true },
   { path: "/chat", name: "Chat IA", icon: MessageSquareIcon, isPrimary: true },
   { path: "/insights", name: "Insights", icon: LightbulbIcon, isPrimary: true },
+  { path: "/market-intel", name: "Mercado", icon: RadarIcon, isPrimary: true },
   { path: "/products", name: "Produtos", icon: PackageIcon },
   { path: "/customers", name: "Clientes", icon: UsersIcon },
   { path: "/costs", name: "Custos", icon: ReceiptIcon },

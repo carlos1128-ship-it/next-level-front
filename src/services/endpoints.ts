@@ -14,6 +14,8 @@ import type {
   IntegrationProvider,
   ForecastResponse,
   StrategicAction,
+  MarketComparison,
+  MarketTrend,
 } from "../types/domain";
 
 function extractCompanyId(company: Partial<Company> | null | undefined) {
@@ -78,6 +80,29 @@ function normalizeCost(cost: any): OperationalCost {
     createdAt: typeof createdAt === "string" ? createdAt : new Date(createdAt).toISOString(),
     updatedAt: typeof updatedAt === "string" ? updatedAt : new Date(updatedAt).toISOString(),
   } as OperationalCost;
+}
+
+function normalizeMarketComparison(item: any): MarketComparison {
+  return {
+    productId: item?.productId || item?.product_id || "",
+    productName: item?.productName || item?.product_name || "Produto",
+    internalPrice: Number(item?.internalPrice ?? item?.internal_price ?? 0),
+    marketAverage: Number(item?.marketAverage ?? item?.market_average ?? 0),
+    gapPct: Number(item?.gapPct ?? item?.gap_pct ?? 0),
+    badge: (item?.badge as MarketComparison["badge"]) || "sem_dados",
+  };
+}
+
+function normalizeMarketTrend(item: any): MarketTrend {
+  const createdAt = item?.createdAt || item?.created_at || new Date().toISOString();
+  return {
+    id: item?.id || item?._id,
+    companyId: item?.companyId || item?.company_id,
+    term: item?.term || "",
+    volume: Number(item?.volume ?? 0),
+    growthPercentage: Number(item?.growthPercentage ?? item?.growth_percentage ?? 0),
+    createdAt: typeof createdAt === "string" ? createdAt : new Date(createdAt).toISOString(),
+  };
 }
 
 function asPaginated<T>(
@@ -492,6 +517,42 @@ export async function executeStrategicAction(id: string, companyId?: string | nu
   const { data } = await api.post<StrategicAction>(`/strategy/actions/${id}/execute`, null, {
     params: companyId ? { companyId } : undefined,
   });
+  return data;
+}
+
+export async function getMarketIntelOverview(params?: { companyId?: string | null }) {
+  const { data } = await api.get<{
+    comparison?: any[];
+    trends?: any[];
+    refreshedAt?: string | null;
+  }>("/market-intel/overview", {
+    params: params?.companyId ? { companyId: params.companyId } : undefined,
+  });
+
+  return {
+    comparison: Array.isArray(data?.comparison)
+      ? data.comparison.map((item) => normalizeMarketComparison(item))
+      : [],
+    trends: Array.isArray(data?.trends) ? data.trends.map((t) => normalizeMarketTrend(t)) : [],
+    refreshedAt: (data?.refreshedAt as string) || null,
+  };
+}
+
+export async function triggerMarketScan(params?: { companyId?: string | null; productIds?: string[] }) {
+  const { data } = await api.post(
+    "/market-intel/track",
+    params?.productIds?.length ? { productIds: params.productIds } : {},
+    { params: params?.companyId ? { companyId: params.companyId } : undefined }
+  );
+  return data;
+}
+
+export async function refreshMarketTrends(companyId?: string | null) {
+  const { data } = await api.post(
+    "/market-intel/trends/refresh",
+    {},
+    { params: companyId ? { companyId } : undefined }
+  );
   return data;
 }
 
