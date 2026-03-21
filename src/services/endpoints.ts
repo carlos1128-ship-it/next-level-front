@@ -19,6 +19,12 @@ import type {
   BotConfig,
   Lead,
   LeadStatus,
+  AdminErrorLog,
+  AdminHealth,
+  AdminQuota,
+  AdminUsageStats,
+  AuditFeedItem,
+  SubscriptionTier,
 } from "../types/domain";
 
 function extractCompanyId(company: Partial<Company> | null | undefined) {
@@ -146,6 +152,123 @@ function normalizeLead(data: any): Lead {
     createdAt: data?.createdAt || new Date().toISOString(),
     updatedAt: data?.updatedAt || new Date().toISOString(),
     conversations,
+  };
+}
+
+function normalizeAdminHealth(data: any): AdminHealth {
+  return {
+    services: {
+      database: {
+        status: data?.services?.database?.status || "unknown",
+        latencyMs: Number(data?.services?.database?.latencyMs || 0),
+      },
+      redis: {
+        status: data?.services?.redis?.status || "unknown",
+        latencyMs: Number(data?.services?.redis?.latencyMs || 0),
+      },
+      ai: {
+        status: data?.services?.ai?.status || "unknown",
+        avgLatencyMs: Number(data?.services?.ai?.avgLatencyMs || 0),
+      },
+    },
+    providers: {
+      meta: data?.providers?.meta || "unknown",
+      mercadoLivre: data?.providers?.mercadoLivre || "unknown",
+      gemini: data?.providers?.gemini || "missing",
+      openai: data?.providers?.openai || "missing",
+    },
+    requestTimeline: Array.isArray(data?.requestTimeline)
+      ? data.requestTimeline.map((point: any) => ({
+          label: point?.label || "",
+          avgResponseTime: Number(point?.avgResponseTime || 0),
+          success: Number(point?.success || 0),
+          failure: Number(point?.failure || 0),
+        }))
+      : [],
+    successVsFailure: {
+      success: Number(data?.successVsFailure?.success || 0),
+      failure: Number(data?.successVsFailure?.failure || 0),
+      errorRateLastWindow: Number(data?.successVsFailure?.errorRateLastWindow || 0),
+    },
+  };
+}
+
+function normalizeAdminUsageStats(data: any): AdminUsageStats {
+  return {
+    totals: {
+      totalTokens: Number(data?.totals?.totalTokens || 0),
+      totalMessages: Number(data?.totals?.totalMessages || 0),
+      monthlyRevenue: Number(data?.totals?.monthlyRevenue || 0),
+      aiCostEstimate: Number(data?.totals?.aiCostEstimate || 0),
+      estimatedProfit: Number(data?.totals?.estimatedProfit || 0),
+    },
+    companies: Array.isArray(data?.companies)
+      ? data.companies.map((item: any) => ({
+          companyId: item?.companyId || "",
+          companyName: item?.companyName || "Empresa",
+          currentTier: (item?.currentTier as SubscriptionTier) || "FREE",
+          llmTokensUsed: Number(item?.llmTokensUsed || 0),
+          whatsappMessagesSent: Number(item?.whatsappMessagesSent || 0),
+          billingCycleEnd: item?.billingCycleEnd || new Date().toISOString(),
+          monthlyRevenue: Number(item?.monthlyRevenue || 0),
+          aiCostEstimate: Number(item?.aiCostEstimate || 0),
+          profitEstimate: Number(item?.profitEstimate || 0),
+        }))
+      : [],
+  };
+}
+
+function normalizeAdminQuota(data: any): AdminQuota {
+  return {
+    id: data?.id || "",
+    companyId: data?.companyId || "",
+    llmTokensUsed: Number(data?.llmTokensUsed || 0),
+    whatsappMessagesSent: Number(data?.whatsappMessagesSent || 0),
+    currentTier: (data?.currentTier as SubscriptionTier) || "FREE",
+    billingCycleEnd: data?.billingCycleEnd || new Date().toISOString(),
+    createdAt: data?.createdAt || new Date().toISOString(),
+    updatedAt: data?.updatedAt || new Date().toISOString(),
+    company: {
+      id: data?.company?.id || data?.companyId || "",
+      name: data?.company?.name || "Empresa",
+      sector: data?.company?.sector ?? null,
+    },
+  };
+}
+
+function normalizeAdminErrorLog(data: any): AdminErrorLog {
+  return {
+    id: data?.id || "",
+    method: data?.method || "GET",
+    path: data?.path || "/",
+    statusCode: Number(data?.statusCode || 0),
+    responseTime: Number(data?.responseTime || 0),
+    companyId: data?.companyId ?? null,
+    createdAt: data?.createdAt || new Date().toISOString(),
+    company: data?.company
+      ? {
+          id: data.company.id || "",
+          name: data.company.name || "Empresa",
+        }
+      : null,
+  };
+}
+
+function normalizeAuditFeedItem(data: any): AuditFeedItem {
+  return {
+    id: data?.id || "",
+    companyId: data?.companyId ?? null,
+    actorType: data?.actorType || "SYSTEM",
+    actorId: data?.actorId ?? null,
+    action: data?.action || "system.unknown",
+    details: data?.details,
+    createdAt: data?.createdAt || new Date().toISOString(),
+    company: data?.company
+      ? {
+          id: data.company.id || "",
+          name: data.company.name || "Empresa",
+        }
+      : null,
   };
 }
 
@@ -644,6 +767,49 @@ export async function getAttendantRoi(companyId?: string | null) {
     iaSalesCount: Number(data?.iaSalesCount || 0),
     iaRevenue: Number(data?.iaRevenue || 0),
   };
+}
+
+export async function getAdminHealth() {
+  const { data } = await api.get("/admin/health");
+  return normalizeAdminHealth(data);
+}
+
+export async function getAdminUsageStats() {
+  const { data } = await api.get("/admin/usage-stats");
+  return normalizeAdminUsageStats(data);
+}
+
+export async function getAdminErrorLogs() {
+  const { data } = await api.get<any[]>("/admin/error-logs");
+  return Array.isArray(data) ? data.map(normalizeAdminErrorLog) : [];
+}
+
+export async function getAdminAuditFeed() {
+  const { data } = await api.get<any[]>("/admin/audit-feed");
+  return Array.isArray(data) ? data.map(normalizeAuditFeedItem) : [];
+}
+
+export async function getAdminQuotas() {
+  const { data } = await api.get<any[]>("/admin/quotas");
+  return Array.isArray(data) ? data.map(normalizeAdminQuota) : [];
+}
+
+export async function resetAdminQuota(companyId: string) {
+  const { data } = await api.post(`/admin/quotas/${companyId}/reset`);
+  return normalizeAdminQuota(data);
+}
+
+export async function updateAdminQuota(
+  companyId: string,
+  payload: Partial<{
+    currentTier: SubscriptionTier;
+    llmTokensUsed: number;
+    whatsappMessagesSent: number;
+    billingCycleEnd: string;
+  }>
+) {
+  const { data } = await api.patch(`/admin/quotas/${companyId}`, payload);
+  return normalizeAdminQuota(data);
 }
 
 export async function exportFinancialCsv(params?: { companyId?: string | null }) {

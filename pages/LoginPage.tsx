@@ -145,7 +145,7 @@ const LoginPage = () => {
         access_token?: string;
         refreshToken?: string;
         refresh_token?: string;
-        user?: { name?: string };
+        user?: { name?: string; admin?: boolean };
       }>("/auth/login", {
         email,
         password,
@@ -175,7 +175,7 @@ const LoginPage = () => {
       } else {
         localStorage.removeItem("refresh_token");
       }
-      login({ name: response.data.user?.name || email, email });
+      login({ name: response.data.user?.name || email, email, admin: Boolean(response.data.user?.admin) });
       navigate("/", { replace: true });
     } catch (err: unknown) {
       if (err && typeof err === "object" && "response" in err) {

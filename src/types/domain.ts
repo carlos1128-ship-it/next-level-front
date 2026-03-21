@@ -38,6 +38,7 @@ export interface UserProfile {
   id?: string;
   name?: string;
   email?: string;
+  admin?: boolean;
   detailLevel?: DetailLevel;
   theme?: "light" | "dark";
   companyCount?: number;
@@ -195,4 +196,107 @@ export interface Lead {
 export interface AttendantRoi {
   iaSalesCount: number;
   iaRevenue: number;
+}
+
+export type SubscriptionTier = "FREE" | "PRO" | "ENTERPRISE";
+export type HealthStatus = "up" | "down" | "unknown";
+export type ProviderStatus = "up" | "degraded" | "unknown" | "configured" | "missing";
+export type AuditActorType = "HUMAN" | "AI" | "SYSTEM";
+
+export interface AdminHealthService {
+  status: HealthStatus;
+  latencyMs: number;
+}
+
+export interface AdminHealthTimelinePoint {
+  label: string;
+  avgResponseTime: number;
+  success: number;
+  failure: number;
+}
+
+export interface AdminHealth {
+  services: {
+    database: AdminHealthService;
+    redis: AdminHealthService;
+    ai: {
+      status: HealthStatus | "unknown";
+      avgLatencyMs: number;
+    };
+  };
+  providers: {
+    meta: ProviderStatus;
+    mercadoLivre: ProviderStatus;
+    gemini: ProviderStatus;
+    openai: ProviderStatus;
+  };
+  requestTimeline: AdminHealthTimelinePoint[];
+  successVsFailure: {
+    success: number;
+    failure: number;
+    errorRateLastWindow: number;
+  };
+}
+
+export interface AdminUsageCompany {
+  companyId: string;
+  companyName: string;
+  currentTier: SubscriptionTier;
+  llmTokensUsed: number;
+  whatsappMessagesSent: number;
+  billingCycleEnd: string;
+  monthlyRevenue: number;
+  aiCostEstimate: number;
+  profitEstimate: number;
+}
+
+export interface AdminUsageStats {
+  totals: {
+    totalTokens: number;
+    totalMessages: number;
+    monthlyRevenue: number;
+    aiCostEstimate: number;
+    estimatedProfit: number;
+  };
+  companies: AdminUsageCompany[];
+}
+
+export interface AdminCompanySummary {
+  id: string;
+  name: string;
+  sector?: string | null;
+}
+
+export interface AdminQuota {
+  id: string;
+  companyId: string;
+  llmTokensUsed: number;
+  whatsappMessagesSent: number;
+  currentTier: SubscriptionTier;
+  billingCycleEnd: string;
+  createdAt: string;
+  updatedAt: string;
+  company: AdminCompanySummary;
+}
+
+export interface AdminErrorLog {
+  id: string;
+  method: string;
+  path: string;
+  statusCode: number;
+  responseTime: number;
+  companyId?: string | null;
+  createdAt: string;
+  company?: Pick<AdminCompanySummary, "id" | "name"> | null;
+}
+
+export interface AuditFeedItem {
+  id: string;
+  companyId?: string | null;
+  actorType: AuditActorType;
+  actorId?: string | null;
+  action: string;
+  details?: unknown;
+  createdAt: string;
+  company?: Pick<AdminCompanySummary, "id" | "name"> | null;
 }

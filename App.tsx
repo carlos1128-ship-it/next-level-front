@@ -1,5 +1,5 @@
 import React, { useEffect, useState, createContext, useContext, ReactNode, lazy, Suspense } from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Chat from './pages/Chat';
 import Settings from './pages/Settings';
@@ -27,10 +27,13 @@ const Costs = lazy(() => import('./pages/Costs'));
 const CommandCenter = lazy(() => import('./pages/CommandCenter'));
 const MarketIntel = lazy(() => import('./pages/MarketIntel'));
 const Attendant = lazy(() => import('./pages/Attendant'));
+const SystemHealth = lazy(() => import('./pages/SystemHealth'));
 
 // Authentication Context
 interface AuthContextType {
   isLoggedIn: boolean;
+  isAdmin: boolean;
+  isProfileReady: boolean;
   username: string | null;
   email: string | null;
   selectedCompanyId: string | null;
@@ -39,7 +42,7 @@ interface AuthContextType {
   setSelectedCompanyId: (value: string | null) => void;
   setDetailLevel: (value: DetailLevel) => void;
   setTheme: (value: 'dark' | 'light') => void;
-  login: (user: { name?: string | null; email?: string | null }) => void;
+  login: (user: { name?: string | null; email?: string | null; admin?: boolean }) => void;
   logout: () => void;
 }
 
@@ -50,15 +53,16 @@ const getCompanyId = (company: Partial<Company> | null | undefined) => company?.
 
 function readStoredUser() {
   const raw = localStorage.getItem(AUTH_USER_STORAGE_KEY);
-  if (!raw) return { name: null as string | null, email: null as string | null };
+  if (!raw) return { name: null as string | null, email: null as string | null, admin: false };
   try {
-    const parsed = JSON.parse(raw) as { name?: string | null; email?: string | null };
+    const parsed = JSON.parse(raw) as { name?: string | null; email?: string | null; admin?: boolean };
     return {
       name: parsed.name || null,
       email: parsed.email || null,
+      admin: Boolean(parsed.admin),
     };
   } catch {
-    return { name: null as string | null, email: null as string | null };
+    return { name: null as string | null, email: null as string | null, admin: false };
   }
 }
 
@@ -73,7 +77,10 @@ export const useAuth = () => {
 const AuthProvider = ({ children }: { children?: ReactNode }) => {
   const storedUser = readStoredUser();
   const storedCompanyId = localStorage.getItem(COMPANY_ID_STORAGE_KEY);
-  const [isLoggedIn, setIsLoggedIn] = useState(Boolean(localStorage.getItem('access_token')));
+  const hasStoredToken = Boolean(localStorage.getItem('access_token'));
+  const [isLoggedIn, setIsLoggedIn] = useState(hasStoredToken);
+  const [isAdmin, setIsAdmin] = useState(Boolean(storedUser.admin));
+  const [isProfileReady, setIsProfileReady] = useState(!hasStoredToken);
   const [username, setUsername] = useState<string | null>(storedUser.name);
   const [email, setEmail] = useState<string | null>(storedUser.email);
   const [selectedCompanyId, setSelectedCompanyIdState] = useState<string | null>(null);
@@ -84,7 +91,9 @@ const AuthProvider = ({ children }: { children?: ReactNode }) => {
     const token = localStorage.getItem('access_token');
     if (token) {
       setIsLoggedIn(true);
+      return;
     }
+    setIsProfileReady(true);
   }, []);
 
   const setSelectedCompanyId = (value: string | null) => {
@@ -96,13 +105,15 @@ const AuthProvider = ({ children }: { children?: ReactNode }) => {
     localStorage.removeItem(COMPANY_ID_STORAGE_KEY);
   };
 
-  const login = (user: { name?: string | null; email?: string | null }) => {
+  const login = (user: { name?: string | null; email?: string | null; admin?: boolean }) => {
     setIsLoggedIn(true);
+    setIsAdmin(Boolean(user.admin));
+    setIsProfileReady(true);
     setUsername(user.name || null);
     setEmail(user.email || null);
     localStorage.setItem(
       AUTH_USER_STORAGE_KEY,
-      JSON.stringify({ name: user.name || null, email: user.email || null })
+      JSON.stringify({ name: user.name || null, email: user.email || null, admin: Boolean(user.admin) })
     );
   };
 
@@ -115,6 +126,8 @@ const AuthProvider = ({ children }: { children?: ReactNode }) => {
     }
 
     setIsLoggedIn(false);
+    setIsAdmin(false);
+    setIsProfileReady(true);
     setUsername(null);
     setEmail(null);
     setSelectedCompanyId(null);
@@ -124,11 +137,15 @@ const AuthProvider = ({ children }: { children?: ReactNode }) => {
   };
 
   useEffect(() => {
-    if (!isLoggedIn) return;
+    if (!isLoggedIn) {
+      setIsProfileReady(true);
+      return;
+    }
     getUserProfile()
       .then((profile) => {
         if (profile?.name) setUsername(profile.name);
         if (profile?.email) setEmail(profile.email);
+        if (typeof profile?.admin === 'boolean') setIsAdmin(profile.admin);
         if (profile?.detailLevel) setDetailLevel(profile.detailLevel);
         if (profile?.theme) setTheme(profile.theme);
         localStorage.setItem(
@@ -136,11 +153,15 @@ const AuthProvider = ({ children }: { children?: ReactNode }) => {
           JSON.stringify({
             name: profile?.name || null,
             email: profile?.email || null,
+            admin: Boolean(profile?.admin),
           })
         );
       })
       .catch(() => {
         // ignore profile bootstrap errors to avoid blocking app load
+      })
+      .finally(() => {
+        setIsProfileReady(true);
       });
   }, [isLoggedIn, setDetailLevel, setTheme]);
 
@@ -174,6 +195,8 @@ const AuthProvider = ({ children }: { children?: ReactNode }) => {
 
   const value = {
     isLoggedIn,
+    isAdmin,
+    isProfileReady,
     username,
     email,
     selectedCompanyId,
@@ -191,8 +214,17 @@ const AuthProvider = ({ children }: { children?: ReactNode }) => {
 
 const ProtectedRoute = ({ children }: { children?: ReactNode }) => {
   const token = localStorage.getItem('access_token');
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, isProfileReady } = useAuth();
+  if (!isProfileReady) return null;
   return isLoggedIn && token ? <>{children}</> : <Navigate to="/login" />;
+};
+
+const AdminRoute = ({ children }: { children?: ReactNode }) => {
+  const token = localStorage.getItem('access_token');
+  const { isLoggedIn, isAdmin, isProfileReady } = useAuth();
+  if (!isProfileReady) return null;
+  if (!isLoggedIn || !token) return <Navigate to="/login" />;
+  return isAdmin ? <>{children}</> : <Navigate to="/" replace />;
 };
 
 const App = () => {
@@ -209,7 +241,7 @@ const AppContent = () => {
   const { isLoggedIn } = useAuth();
 
   return (
-    <HashRouter>
+    <BrowserRouter>
       <Suspense fallback={
         <div className="bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 min-h-screen flex items-center justify-center">
           <div className="text-center">
@@ -252,12 +284,13 @@ const AppContent = () => {
           <Route path="/costs" element={<ProtectedRoute><Layout><Costs /></Layout></ProtectedRoute>} />
           <Route path="/market-intel" element={<ProtectedRoute><Layout><MarketIntel /></Layout></ProtectedRoute>} />
           <Route path="/attendant" element={<ProtectedRoute><Layout><Attendant /></Layout></ProtectedRoute>} />
+          <Route path="/admin/system-health" element={<AdminRoute><Layout><SystemHealth /></Layout></AdminRoute>} />
           <Route path="/command-center" element={<ProtectedRoute><Layout><CommandCenter /></Layout></ProtectedRoute>} />
           <Route path="/plans" element={<ProtectedRoute><Layout><Plans /></Layout></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Suspense>
-    </HashRouter>
+    </BrowserRouter>
   );
 };
 

@@ -85,3 +85,16 @@ export const RadarIcon = ({ className }: { className?: string }) => (
     <circle cx="12" cy="12" r="2" />
   </svg>
 );
+
+export const ShieldIcon = ({ className }: { className?: string }) => (
+  <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
+    <path d="m9 12 2 2 4-4" />
+  </svg>
+);
+
+export const ActivityIcon = ({ className }: { className?: string }) => (
+  <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 12h-4l-3 7-4-14-3 7H2" />
+  </svg>
+);

@@ -23,8 +23,8 @@ function clearAuthStorage() {
   localStorage.removeItem('selectedCompanyId');
   localStorage.removeItem('auth_user');
 
-  if (!window.location.hash.includes('/login')) {
-    window.location.assign('/#/login');
+  if (window.location.pathname !== '/login') {
+    window.location.assign('/login');
   }
 }
 

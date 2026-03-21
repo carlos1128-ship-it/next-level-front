@@ -17,7 +17,7 @@ import {
   UsersIcon,
   ReceiptIcon,
   RadarIcon,
-  MessageSquareIcon,
+  ShieldIcon,
 } from "./icons";
 import { useAuth } from "../App";
 
@@ -39,8 +39,11 @@ const navItems: NavItem[] = [
   { path: "/financial-flow", name: "Fluxo Financeiro", icon: DollarSignIcon },
 ];
 
+const adminNavItem: NavItem = { path: "/admin/system-health", name: "System Health", icon: ShieldIcon };
+
 const Sidebar = () => {
-  const { username } = useAuth();
+  const { username, isAdmin } = useAuth();
+  const items = isAdmin ? [...navItems, adminNavItem] : navItems;
   return (
     <aside className="fixed left-0 top-0 z-50 hidden h-full w-64 flex-col justify-between border-r border-zinc-900 bg-[#080b10] p-6 text-zinc-100 lg:flex">
       <div>
@@ -48,7 +51,7 @@ const Sidebar = () => {
         <p className="mb-6 text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">Operacao Segura</p>
         <nav aria-label="Menu Principal">
           <ul className="space-y-1">
-            {(Array.isArray(navItems) ? navItems : []).map((item) => (
+            {(Array.isArray(items) ? items : []).map((item) => (
               <li key={item.path}>
                 <NavLink
                   to={item.path}
@@ -83,12 +86,17 @@ const Sidebar = () => {
 };
 
 const Header = () => {
-  const { username } = useAuth();
+  const { username, isAdmin } = useAuth();
 
   return (
     <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-zinc-900 bg-[#101218]/95 px-6 backdrop-blur lg:justify-end lg:px-8">
       <div className="text-lg font-black text-lime-400 lg:hidden">NEXT LEVEL</div>
       <div className="flex items-center gap-4">
+        {isAdmin ? (
+          <Link to="/admin/system-health" className="p-2 text-zinc-500 transition-colors hover:text-lime-400" aria-label="Painel admin">
+            <ShieldIcon className="h-5 w-5" />
+          </Link>
+        ) : null}
         <Link to="/settings" className="p-2 text-zinc-500 transition-colors hover:text-lime-400" aria-label="Configuracoes">
           <SettingsIcon className="h-5 w-5" />
         </Link>
